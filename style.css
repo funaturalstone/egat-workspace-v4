@@ -526,3 +526,8 @@ body[data-view=overview] #rail-menu{margin-bottom:10px}
 .topbar{padding-bottom:10px}
 .product-picker{margin-top:8px}
 .picker-heading{margin-bottom:7px}
+
+/* ===== V4.17 — overview first screen ends exactly at the KPI row: product cards take whatever height is left ===== */
+@media(min-width:901px){
+  body[data-view=overview] .product-choice .product-model{height:var(--fold-model-h,210px)}
+}
