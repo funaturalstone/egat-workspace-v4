@@ -48,3 +48,177 @@ body.gated{overflow:hidden}
 .account{display:flex;flex-direction:column;gap:4px;margin-bottom:6px;font-size:11px;color:var(--text);word-break:break-all}
 .account[hidden]{display:none}
 .account .text-button{align-self:flex-start;font-size:11px!important;color:var(--orange)!important;min-height:28px}
+
+/* ===== V4.1 — main-site proportions: hover-expand sidebar, compact picker, one big chart per row ===== */
+/* header: home icon back to the landing page */
+.home-link{display:grid;place-items:center;width:36px;height:36px;flex-shrink:0;border-radius:11px;border:1px solid var(--line);background:#ffffff06;color:#c9d8e6;transition:color .18s,border-color .18s,background .18s}
+.home-link svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.home-link:hover{color:var(--orange);border-color:#ffb28b55;background:#ffb28b10}
+.home-link:focus-visible{outline:3px solid var(--orange);outline-offset:3px}
+
+/* sidebar — same look as the main site's navigation */
+.rail{background:linear-gradient(160deg,#153048,#102337)}
+.side-brand .brand{display:grid;place-items:center;width:39px;height:39px;border-radius:13px;background:linear-gradient(135deg,#ffd2a7,#f3a387);color:#263043;font-size:20px;letter-spacing:0;left:0}
+.side-brand .brand>span{display:none}
+.nav-mini{display:none;flex-direction:column;align-items:center;gap:6px}
+.nav-ini{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:#ffffff08;color:#bed0df;font-size:17px;border:0;transition:background .18s,color .18s}
+.nav-ini:hover{background:#ffffff12;color:#fff}
+.nav-ini.active{background:#315449;color:#c8efdf;box-shadow:inset 3px 0 #b9e3ce}
+.nav-ini-add{margin-top:6px;background:transparent;border:1px dashed #496076;color:#a8c7d8}
+.project-section-heading{color:#8ea6bd;letter-spacing:.1em;border-top:0;margin:18px 6px 10px;padding-top:0}
+.project-section-heading button{background:#ffffff0a;border-color:#ffffff1a;color:#c2d1de}
+.project-group{margin-bottom:4px}
+.project-group summary{padding:12px 10px;border-radius:12px;color:#b5c6d6;gap:8px;transition:background .15s,color .15s}
+.project-group summary:hover{background:#ffffff09;color:#fff}
+.project-group.active>summary{background:#ffffff12;box-shadow:inset 3px 0 #b9e3ce;color:#fff}
+.project-group summary>span{color:#c8efdf;width:16px;text-align:center}
+.project-group summary b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.project-group summary small{background:#ffffff0d;color:#9fb6cc;margin-left:0}
+.nav-caret{font-style:normal;flex:none;width:16px;color:#8aa6bd;font-size:10px;text-align:center;transition:transform .18s ease}
+.project-group[open] .nav-caret{transform:rotate(90deg)}
+.project-children{margin:2px 0 6px 14px;padding:0 0 0 12px;border-left:1px solid #ffffff14;display:flex;flex-direction:column;gap:2px}
+.project-row{margin:0;padding:2px 4px 2px 0;border:0;border-radius:11px;gap:4px;transition:background .15s}
+.project-row:hover{background:#ffffff09}
+.project-row.selected{background:#ffffff12;border:0;box-shadow:inset 3px 0 #b9e3ce}
+.project-select{padding:8px 4px 8px 10px;gap:8px;align-items:center}
+.project-select b{max-width:none;color:#d5e2ee}
+.project-select small{display:none}
+.project-dot{width:6px;height:6px;background:#5d768b}
+.project-row.selected .project-dot{background:#b9e3ce}
+.project-dot.below{background:#8a5a5f}
+.project-status{align-self:center;margin:0;font-size:8px;font-weight:700;padding:3px 6px;border-radius:999px;background:#2b4a49;color:#c3e8d6;white-space:nowrap}
+.project-status.below{background:#493c43;color:#f5b8be}
+.project-row-actions{flex-direction:row;align-items:center;gap:3px}
+.project-row-actions .nav-edit{width:28px;height:28px;min-width:28px;min-height:28px;display:grid;place-items:center;background:#ffffff12;border:1px solid #ffffff1f;color:#d4e4f2;font-size:15px;border-radius:8px;transition:background .15s,transform .12s}
+.project-row-actions .nav-edit:hover{background:#2b6150;border-color:#3d8a71;color:#fff;transform:scale(1.06)}
+.project-row-actions .nav-del{width:22px;height:28px;min-width:22px;color:#8fa8c0;font-size:15px;opacity:.55;background:none}
+.project-row:hover .nav-del,.project-row-actions .nav-del:focus-visible{opacity:1}
+.project-row-actions .nav-del:hover{color:#f5b8be;background:#493c4380}
+.add-child{margin-top:4px;text-align:left;background:transparent;border:1px dashed #395268;color:#8fb6cf;font-weight:600;padding:8px 11px;border-radius:9px;transition:background .15s,color .15s}
+.add-child:hover{background:#ffffff0d;color:#cfe6f3}
+.side-bottom{border-top:1px solid #ffffff12;color:#9db0c2}
+
+@media(min-width:901px){
+  .app-shell{grid-template-columns:84px minmax(0,1fr);gap:0;padding:0;max-width:none;transition:grid-template-columns .28s cubic-bezier(.2,.7,.2,1)}
+  body.rail-open .app-shell{grid-template-columns:280px minmax(0,1fr)}
+  .workspace{width:100%;max-width:1680px;margin:0 auto;padding:20px clamp(20px,2.4vw,40px) 28px}
+  .rail{position:sticky;top:0;width:auto;height:100vh;min-height:0;border:0;border-right:1px solid #ffffff0d;border-radius:0;padding:24px 14px 16px;overflow-x:hidden;overflow-y:auto;box-shadow:none}
+  body.rail-open .rail>*{min-width:250px}
+  body:not(.rail-open) .rail{padding:22px 10px 16px}
+  body:not(.rail-open) .rail .brand-copy,body:not(.rail-open) .rail .project-section-heading,body:not(.rail-open) .rail .project-group,body:not(.rail-open) .rail .side-bottom{display:none}
+  body:not(.rail-open) .rail .side-brand{justify-content:center;margin:0 0 22px}
+  body:not(.rail-open) .nav-mini{display:flex}
+}
+@media(min-width:901px) and (prefers-reduced-motion:reduce){.app-shell{transition:none}}
+
+/* compact 3D product picker (smaller tiles, same type sizes) */
+.product-picker{margin-top:14px}
+.product-tabs{gap:12px}
+.product-choice{min-height:0;padding:12px 16px 14px}
+.product-choice .product-model{height:104px;margin:2px 0 0;width:100%}
+
+/* charts: big charts one per row; small ones pair up and take the full row when expanded */
+.chart-stack{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.chart-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.chart-pair .chart-wide{grid-column:1/-1}
+.chart-stack.compare-chart-grid{grid-template-columns:minmax(0,1fr)}
+.overview-stack,.chart-stack+.status-strip{margin-top:18px}
+.chart-card{position:relative}
+.chart-card .card-head{padding-right:110px}
+.chart-tools{position:absolute;top:20px;right:20px;margin:0}
+.chart-tools:after{display:none!important}
+.chart-tools .chart-toggle{min-height:30px;padding:5px 12px;border-radius:9px;font-size:10px;background:#ffffff08;border:1px solid #ffffff1c;color:#c9d8e6}
+.chart-tools .chart-toggle:hover{border-color:#efb68d70;color:var(--orange)}
+.resizable-chart{resize:none;border-bottom:0;padding:0;min-height:0;max-height:none;overflow:visible}
+.chart-wide .card-head h3{font-size:inherit}
+@media(max-width:900px){.chart-pair{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:620px){.chart-card .card-head{padding-right:0}.chart-tools{position:static;margin:0 0 12px}}
+
+/* chart motion — same timing as the main site (bars 0.65 s from the baseline, lines draw in 0.7 s) */
+@media(prefers-reduced-motion:no-preference){
+  .chart .bar{transform-box:fill-box;transform-origin:50% 100%;animation:bar-grow .65s cubic-bezier(.2,.7,.2,1) both}
+  .chart .bar.down{transform-origin:50% 0}
+  .chart .bar.h{transform-origin:0 50%;animation-name:bar-grow-x}
+  .chart .bar.h.rev{transform-origin:100% 50%}
+  .chart .draw{animation:line-draw .7s ease-out both}
+  .chart .seg{animation:seg-in .6s ease-out both}
+  .settled .chart *{animation:none!important}
+}
+@keyframes bar-grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes bar-grow-x{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes line-draw{from{clip-path:inset(-10px 100% -10px 0)}to{clip-path:inset(-10px 0 -10px 0)}}
+@keyframes seg-in{from{opacity:0}to{opacity:1}}
+@media print{.home-link,.chart-tools{display:none!important}.app-shell{display:block}}
+
+/* ===== V4.2 — 25% tighter layout (type sizes unchanged), calmer redraws, cost details, cash-flow table ===== */
+#content:not(.entering) .card{animation:none}
+.resizable-chart{transition:height .3s cubic-bezier(.2,.7,.2,1)}
+@media(prefers-reduced-motion:reduce){.resizable-chart{transition:none}}
+body:not([data-view=overview]) .context-panel{display:none}
+body:not([data-view=overview]) .body-grid{grid-template-columns:minmax(0,1fr)}
+
+.card{padding:16px}
+.metric-grid{gap:11px;margin-bottom:13px}
+.metric-card{padding:14px 16px;min-height:108px}
+.chart-stack,.chart-pair{gap:13px}
+.chart-stack+.status-strip{margin-top:13px}
+.decision-panel{padding:12px 16px;margin-bottom:13px;gap:16px}
+.page-heading{padding:16px 0 12px}
+.topbar{padding-bottom:14px}
+.product-picker{margin-top:10px}
+.picker-heading{margin-bottom:10px}
+.product-tabs{gap:9px}
+.product-choice{padding:9px 12px 10px;border-radius:14px}
+.product-choice .product-model{height:78px}
+.analysis-nav{padding:4px;margin-top:10px}
+.analysis-nav .rail-button{height:33px}
+.chart-tools{top:14px;right:14px}
+.chart-card .card-head{padding-right:100px}
+.table-card td{padding:9px 10px}
+.table-card th{padding:10px}
+@media(min-width:901px){
+  .app-shell{grid-template-columns:64px minmax(0,1fr)}
+  body.rail-open .app-shell{grid-template-columns:250px minmax(0,1fr)}
+  body.rail-open .rail>*{min-width:224px}
+  body:not(.rail-open) .rail{padding:18px 8px 14px}
+  .nav-ini{width:40px;height:40px;border-radius:11px}
+  .workspace{padding:14px clamp(14px,1.8vw,30px) 22px}
+}
+@media(min-width:1161px){.body-grid{grid-template-columns:minmax(0,1fr) 220px;gap:18px}}
+@media(max-width:620px){.chart-card .card-head{padding-right:0}}
+
+/* cost breakdown: donut sweeps in; each part opens its details */
+@media(prefers-reduced-motion:no-preference){
+  .chart .donut{transform-box:fill-box;transform-origin:center;animation:donut-in .7s cubic-bezier(.2,.7,.2,1) both}
+  .chart .seg{animation:none}
+}
+@keyframes donut-in{from{transform:rotate(-100deg) scale(.6);opacity:0}to{transform:none;opacity:1}}
+.chart [data-cost]{cursor:pointer}
+.chart .seg{transition:opacity .2s,stroke-width .2s}
+.chart .seg:hover{opacity:1!important;stroke-width:28}
+.chart .seg:focus-visible{outline:none;stroke-width:30}
+.chart .cost-row:hover rect{fill:#ffffff0a}
+.cost-hint{font-size:10px;color:#86a0ba;margin:8px 0 0}
+.cost-detail{margin-top:10px;padding:13px 15px;border:1px solid #ffffff14;border-radius:12px;background:#ffffff06;animation:enter .25s both}
+.cost-detail-head{display:flex;justify-content:space-between;align-items:center}
+.cost-detail-head b{font-size:13px}
+.cost-detail-head button{background:none;color:#9fb6cc;font-size:17px;width:26px;height:26px;border-radius:7px}
+.cost-detail-head button:hover{background:#ffffff10;color:#fff}
+.cost-detail-total{font-size:20px;font-weight:600;margin:4px 0 8px}
+.cost-detail-total small{font-size:10px;font-weight:400;color:#9fb6cc}
+.cost-detail dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:0}
+.cost-detail dl div{background:#ffffff06;border-radius:9px;padding:7px 10px}
+.cost-detail dt{font-size:9px;color:#86a0ba}
+.cost-detail dd{margin:2px 0 0;font-size:11px;color:#e6eef8}
+
+/* cash-flow table: collapse + CSV like the main site */
+.table-actions{display:flex;gap:8px;flex-wrap:wrap}
+.chart-toggle{min-height:30px;padding:5px 12px;border-radius:9px;font-size:10px;background:#ffffff08;border:1px solid #ffffff1c;color:#c9d8e6;white-space:nowrap}
+.chart-toggle:hover{border-color:#efb68d70;color:var(--orange)}
+.chart-toggle.primary{background:linear-gradient(135deg,#ffd2a7,#f3a387);border-color:transparent;color:#22304a;font-weight:600}
+.chart-toggle.primary:hover{color:#22304a;filter:brightness(1.05)}
+.cashflow-table.collapsed .table-wrap,.cashflow-table.collapsed>.graph-note{display:none}
+.cashflow-table.collapsed .card-head{margin-bottom:0}
+@media print{.table-actions{display:none}.cashflow-table.collapsed .table-wrap{display:block}}
+.project-group summary i.nav-caret{transform:none;font-size:10px;color:#8aa6bd}
+.project-group[open] summary i.nav-caret{transform:rotate(90deg)}

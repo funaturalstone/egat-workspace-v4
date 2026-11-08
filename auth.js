@@ -3,6 +3,14 @@ const DEMO_KEY = 'egat-v4-mode';
 const $ = s => document.querySelector(s);
 
 export async function chooseMode(supabase) {
+  // "ทดลองใช้งาน" on the landing page opens app.html?demo
+  const url = new URL(location.href);
+  if (url.searchParams.has('demo')) {
+    try { sessionStorage.setItem(DEMO_KEY, 'demo'); } catch { /* storage blocked */ }
+    url.searchParams.delete('demo');
+    history.replaceState(null, '', url.pathname + url.search + url.hash);
+    return { mode: 'demo' };
+  }
   if (supabase) {
     const { data } = await supabase.auth.getSession();
     if (data.session) return { mode: 'cloud', user: data.session.user };
@@ -37,7 +45,7 @@ function openGate(supabase, resolve) {
     submit.disabled = true; say(signup ? 'กำลังสมัคร…' : 'กำลังเข้าสู่ระบบ…', 'info');
     try {
       if (signup) {
-        const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: location.origin } });
+        const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + '/app.html' } });
         if (error) throw error;
         if (data.session) return done({ mode: 'cloud', user: data.session.user });
         setMode(false); say('ส่งอีเมลยืนยันแล้ว · กดลิงก์ในอีเมล แล้วกลับมาเข้าสู่ระบบ', 'info');
@@ -84,8 +92,6 @@ export function showSignedIn(user, supabase) {
     location.reload();
   };
   $('#account').hidden = false;
-  const badge = $('.demo-badge');
-  if (badge?.lastChild) badge.lastChild.textContent = user ? ' WORKSPACE V4 · CLOUD' : ' WORKSPACE V4 · DEMO';
   const tag = $('.sample-tag');
   if (tag) tag.textContent = user ? 'ข้อมูลของบัญชีนี้' : 'ข้อมูลสมมติ';
 }

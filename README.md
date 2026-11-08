@@ -19,7 +19,8 @@
 - **เข้าสู่ระบบ** แล้วโครงการบันทึกบนคลาวด์อัตโนมัติ เห็นได้เฉพาะบัญชีตัวเอง หรือใช้ **โหมดทดลอง** (เก็บในเบราว์เซอร์)
 
 ## โครงสร้าง
-- `index.html` `app.js` `style.css` — UI
+- `index.html` `landing.js` `landing.css` — หน้าแรก (landing) · ปุ่มทดลองใช้งานเปิด `/app.html?demo`
+- `app.html` `app.js` `style.css` — พื้นที่ทำงาน (`/app.html`)
 - `auth.js` — หน้าเข้าสู่ระบบ / สมัคร / โหมดทดลอง
 - `store.js` — เลือกที่เก็บข้อมูล: Supabase (เข้าสู่ระบบ) หรือ localStorage (ทดลอง) · บันทึกแบบหน่วง 0.6 วินาที
 - `workspace-sync.js` — แปลงข้อมูลแอป ↔ แถวในฐานข้อมูล (มีเทสต์)
@@ -60,7 +61,7 @@ npm install
 #   VITE_SUPABASE_URL=https://hdreqbadncphcxlyxfrh.supabase.co
 #   VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 npm run dev      # http://localhost:5193
-npm test         # 13 tests
+npm test         # 20 tests
 npm run build
 ```
 ใช้เฉพาะ publishable key ฝั่งหน้าเว็บ ห้ามใส่ service_role / secret key
