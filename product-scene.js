@@ -188,9 +188,12 @@ export function mountProductScene(container, product = 'solar', options = {}) {
     const bounds = new THREE.Box3().setFromObject(group), size = bounds.getSize(new THREE.Vector3()), center = bounds.getCenter(new THREE.Vector3());
     const mat = new THREE.MeshStandardMaterial({ color:'#ffb48d', emissive:'#ff9a66', emissiveIntensity:.7, transparent:true, opacity:0, roughness:.4 }); materials.add(mat);
     const ring = box(model,[size.x+.34,.03,size.z+.34],[center.x,.115,center.z],mat,.14); ring.castShadow = false;
-    return { key, group, ring, baseY: group.position.y, lift: 0, glow: 0 };
+    const own = new Map();
+    group.traverse(obj => { if (!obj.isMesh) return; let c = own.get(obj.material); if (!c) { c = obj.material.clone(); c.userData.base = c.color.clone(); c.userData.baseEmissive = c.emissiveIntensity; own.set(obj.material, c); materials.add(c); } obj.material = c; });
+    return { key, group, ring, mats: [...own.values()], baseY: group.position.y, lift: 0, glow: 0, dim: 0 };
   });
   let focusKeys = [];
+  const DIM = new THREE.Color('#16263d');
   const sun = ball(model,.23,[-2.35,3.15,-.65],m.orange);
   const cloud = new THREE.Group(); cloud.position.set(.30,3.48,-1.4); model.add(cloud);
   ball(cloud,.17,[-.20,0,0],m.white); ball(cloud,.24,[0,.07,0],m.white); ball(cloud,.16,[.21,0,0],m.white);
@@ -230,7 +233,7 @@ export function mountProductScene(container, product = 'solar', options = {}) {
       cloud.position.y=3.48+(motion&&!media.matches?Math.sin(time*.58)*.035:0);
       sun.position.y=3.15+(motion&&!media.matches?Math.sin(time*.67)*.025:0);
       const ease=media.matches?1:1-Math.exp(-7*dt);
-      focus.forEach(f=>{const on=focusKeys.includes(f.key);f.lift+=((on?.2:0)-f.lift)*ease;f.glow+=((on?.5:0)-f.glow)*ease;f.group.position.y=f.baseY+f.lift;f.ring.material.opacity=f.glow;});
+      focus.forEach(f=>{const on=focusKeys.includes(f.key),off=focusKeys.length>0&&!on;f.lift+=((on?.24:0)-f.lift)*ease;f.glow+=((on?.6:0)-f.glow)*ease;const lastDim=f.dim;f.dim+=((off?1:0)-f.dim)*ease;f.group.position.y=f.baseY+f.lift;f.ring.material.opacity=f.glow;if(Math.abs(f.dim-lastDim)>1e-4||f.dim===0&&lastDim!==0)f.mats.forEach(c=>{c.color.copy(c.userData.base).lerp(DIM,f.dim*.78);c.emissiveIntensity=c.userData.baseEmissive*(1-f.dim*.8);});});
       particles.forEach((p,i)=>p.position.copy(routes[i].getPoint((time*.1+.3)%1)).add(new THREE.Vector3(0,.04,0)));
       renderer.render(scene,camera);
     }
