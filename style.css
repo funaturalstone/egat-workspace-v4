@@ -222,3 +222,8 @@ body:not([data-view=overview]) .body-grid{grid-template-columns:minmax(0,1fr)}
 @media print{.table-actions{display:none}.cashflow-table.collapsed .table-wrap{display:block}}
 .project-group summary i.nav-caret{transform:none;font-size:10px;color:#8aa6bd}
 .project-group[open] summary i.nav-caret{transform:rotate(90deg)}
+
+/* ===== V4.3 — 25% narrower page, no focus box on the cost donut ===== */
+@media(min-width:901px){.workspace{max-width:1060px}}
+.chart :focus{outline:none}
+.chart .seg:focus-visible{stroke-width:30;opacity:1!important}
