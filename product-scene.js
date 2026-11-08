@@ -1,0 +1,243 @@
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+/** EGAT Product Studio V5 models (Solar PPA / Solar + Battery / Battery), from EGAT-Product-Studio-V5.zip.
+ * Changes for the workspace: npm Three.js import, optional gentle sway (options.sway) and a smaller shadow map
+ * option (options.shadowSize) so three cards can run side by side.
+ *
+ * Real geometry, local dependencies, no textures or external services.
+ * Returns { exportCanvas(width, height), setMotion(on), reset(), dispose() }.
+ * Each instance owns its geometry, renderer and event listeners.
+ */
+export function mountProductScene(container, product = 'solar', options = {}) {
+  if (!['solar', 'hybrid', 'battery'].includes(product)) throw new Error('Unknown product');
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.domElement.setAttribute('aria-hidden', 'true');
+  container.append(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(-5, 5, 4, -4, .1, 50);
+  camera.position.set(8.4, 8.2, 11.7);
+  camera.lookAt(0, options.lookY ?? 1.05, 0);
+  scene.add(new THREE.HemisphereLight(0xdbeeff, 0x34425e, 2.5));
+  const key = new THREE.DirectionalLight(0xfff1df, 3.5);
+  key.position.set(-3, 8, 6);
+  key.castShadow = true;
+  key.shadow.mapSize.set(options.shadowSize ?? 2048, options.shadowSize ?? 2048);
+  Object.assign(key.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6, near: .1, far: 30 });
+  key.shadow.bias = -.00025;
+  key.shadow.normalBias = .035;
+  key.shadow.radius = 3;
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0xb5dcff, 2);
+  rim.position.set(3, 5, -6); scene.add(rim);
+  const model = new THREE.Group(); scene.add(model);
+  const material = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: .55, metalness: .05, ...extra });
+  const m = {
+    base: material('#273f5c'), deck: material('#65849b'), white: material('#e2edf0'),
+    ice: material('#a9cae4'), blue: material('#7aa7d3'), edge: material('#537da5'),
+    cell: material('#456fae', { roughness: .3, metalness: .18 }),
+    cell2: material('#5786bb', { roughness: .32, metalness: .18 }),
+    line: material('#a8c9e5'), dark: material('#254460'),
+    mint: material('#a4d9c5'), leaf: material('#a3cbb9'),
+    orange: material('#ffb48d'), light: material('#ffe7cc', { emissive: '#ffb383', emissiveIntensity: .35 }),
+  };
+  const geometries = new Set(), materials = new Set(Object.values(m));
+  function mesh(parent, geometry, mat, position) {
+    geometries.add(geometry);
+    const obj = new THREE.Mesh(geometry, mat);
+    obj.position.set(...position); obj.castShadow = true; obj.receiveShadow = true;
+    parent.add(obj); return obj;
+  }
+  function box(parent, size, pos, mat, radius = .06) {
+    const r = Math.min(radius, ...size.map(n => n / 2));
+    return mesh(parent, new RoundedBoxGeometry(...size, 3, r), mat, pos);
+  }
+  function ball(parent, radius, pos, mat, scale = [1,1,1]) {
+    const obj = mesh(parent, new THREE.SphereGeometry(radius, 24, 16), mat, pos);
+    obj.scale.set(...scale); return obj;
+  }
+  function rod(parent, a, b, radius, mat) {
+    const start = new THREE.Vector3(...a), end = new THREE.Vector3(...b);
+    const obj = mesh(parent, new THREE.CylinderGeometry(radius, radius, start.distanceTo(end), 16), mat, start.clone().add(end).multiplyScalar(.5).toArray());
+    obj.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), end.sub(start).normalize());
+    return obj;
+  }
+  function path(points) {
+    const curve = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p)), false, 'catmullrom', .25);
+    mesh(model, new THREE.TubeGeometry(curve, 90, .045, 10, false), m.orange, [0,0,0]);
+    return curve;
+  }
+  function bolt(parent, pos, scale = 1, side = false) {
+    const shape = new THREE.Shape();
+    shape.moveTo(.07,.28); shape.lineTo(-.17,-.01); shape.lineTo(-.025,-.01);
+    shape.lineTo(-.08,-.27); shape.lineTo(.18,.065); shape.lineTo(.025,.065); shape.closePath();
+    const b = mesh(parent, new THREE.ExtrudeGeometry(shape, { depth: .025, bevelEnabled: true, bevelSegments: 2, bevelSize: .012, bevelThickness: .01 }), m.orange, pos);
+    b.scale.setScalar(scale); if (side) b.rotation.y = Math.PI / 2;
+  }
+  function tree(x,z,scale = 1) {
+    rod(model,[x,.13,z],[x,.62 * scale,z],.055,m.white);
+    ball(model,.27 * scale,[x,.78 * scale,z],m.leaf,[.85,1.25,.9]);
+    ball(model,.20 * scale,[x-.15*scale,.63*scale,z+.05],m.mint);
+  }
+
+  // A shared, softly beveled platform keeps the three illustrations a family.
+  box(model,[6.7,.32,4.45],[0,-.16,0],m.base,.17);
+  box(model,[6.6,.13,4.35],[0,.035,0],m.deck,.065);
+  box(model,[1.05,.045,.045],[0,-.14,2.235],m.orange,.02);
+
+  function solarArray(x,z,width,depth) {
+    const group = new THREE.Group(); group.position.set(x,.14,z); model.add(group);
+    for (const dx of [-width*.34,width*.34]) {
+      box(group,[.18,.1,depth*.9],[dx,.05,0],m.white,.05);
+      rod(group,[dx,.1,-depth*.35],[dx,.92,-depth*.35],.055,m.white);
+      rod(group,[dx,.1,depth*.35],[dx,.38,depth*.35],.055,m.white);
+    }
+    const panel = new THREE.Group(); group.add(panel); panel.position.y = .72; panel.rotation.x = .32;
+    box(panel,[width,.12,depth],[0,0,0],m.white,.06);
+    const cols = width > 3 ? 12 : 6, rows = depth > 2 ? 7 : 5;
+    const w = width-.16, d = depth-.16;
+    box(panel,[w,.025,d],[0,.068,0],m.dark,.015);
+    for (let r=0;r<rows;r++) for (let c=0;c<cols;c++) {
+      const px=-w/2+(c+.5)*w/cols, pz=-d/2+(r+.5)*d/rows;
+      box(panel,[w/cols-.022,.014,d/rows-.022],[px,.089,pz],(c+r)%3 === 0 ? m.cell2 : m.cell,.017);
+      box(panel,[.006,.004,d/rows-.03],[px,.099,pz],m.line,.002);
+    }
+    // Clear module breaks, in addition to the fine photovoltaic cell grid.
+    if (cols===12) box(panel,[.045,.04,d],[0,.10,0],m.white,.01);
+    box(panel,[w,.04,.045],[0,.10,0],m.white,.01);
+    return group;
+  }
+
+  function batteryBank(x,z,count = 3,height = 2.6,unitWidth = 1.02) {
+    const group = new THREE.Group(); group.position.set(x,.13,z); model.add(group);
+    const width = count * unitWidth;
+    box(group,[width+.2,.16,1.48],[0,.08,0],m.dark,.075);
+    for (let i=0;i<count;i++) {
+      const px=(i-(count-1)/2)*unitWidth;
+      box(group,[unitWidth-.035,height,1.29],[px,height/2+.16,0],m.ice,.09);
+      box(group,[unitWidth-.15,height-.28,.065],[px,height/2+.16,.657],m.white,.06);
+      box(group,[unitWidth-.2,.13,1.22],[px,height+.19,0],m.white,.05);
+      box(group,[.33,.16,.035],[px,height-.25,.699],m.dark,.03);
+      for (let k=0;k<3;k++) box(group,[.065,.065,.012],[px-.09+k*.09,height-.25,.724],m.mint,.015);
+      box(group,[.035,.24,.04],[px+unitWidth*.29,height*.58,.712],m.edge,.015);
+      for (let k=0;k<5;k++) box(group,[unitWidth*.50,.027,.018],[px,.44+k*.075,.704],m.edge,.012);
+      bolt(group,[px,height*.55,.712],.65);
+    }
+    box(group,[.04,.83,.68],[width/2+.005,height*.60,0],m.white,.08);
+    bolt(group,[width/2+.035,height*.60,0],1.05,true);
+    return group;
+  }
+  function gridPole(x,z,scale) {
+    const group = new THREE.Group(); group.position.set(x,.14,z); group.scale.setScalar(scale); model.add(group);
+    box(group,[.5,.15,.5],[0,.08,0],m.white,.07);
+    rod(group,[0,.1,0],[0,2.5,0],.08,m.white);
+    for (const [y,w] of [[2.22,1.1],[1.84,.85]]) {
+      box(group,[w,.12,.15],[0,y,0],m.white,.05);
+      for (const dx of [-w*.36,w*.36]) {
+        box(group,[.13,.22,.14],[dx,y+.13,0],m.ice,.04);
+        box(group,[.21,.045,.20],[dx,y+.15,0],m.mint,.02);
+      }
+    }
+    ball(group,.09,[0,2.55,0],m.white);
+  }
+
+  const routes = [];
+  if (product === 'solar') {
+    // Panels occupy the hero area. The inverter is deliberately secondary.
+    solarArray(-.40,-.15,4.65,2.9);
+    box(model,[.62,.94,.52],[2.38,.60,.38],m.white,.09);
+    box(model,[.39,.2,.035],[2.38,.78,.658],m.dark,.035);
+    box(model,[.23,.045,.015],[2.38,.78,.683],m.mint,.014);
+    for (let i=0;i<3;i++) box(model,[.31,.025,.02],[2.38,.36+i*.06,.66],m.edge,.01);
+    routes.push(path([[-1.8,.15,1.42],[-1.8,.15,1.83],[-.5,.15,1.86],[1.7,.15,1.86],[2.38,.15,1.45],[2.38,.15,.67]]));
+    tree(-2.8,-1.72,.82); tree(2.8,1.65,.55);
+  } else if (product === 'hybrid') {
+    // Equal visual weight: solar generation on the left, storage on the right.
+    solarArray(-1.5,.05,2.7,2.65);
+    batteryBank(1.40,-.35,2,2.18,.92);
+    routes.push(path([[-1.8,.15,1.4],[-1.8,.15,1.86],[-.7,.15,1.91],[1.25,.15,1.91],[1.4,.15,1.15],[1.4,.15,.45]]));
+    tree(-2.8,-1.75,.78); tree(2.8,1.65,.55);
+  } else {
+    // Storage is the unmistakable hero, with only a small grid connection behind it.
+    batteryBank(-.28,-.12,3,2.75,1.05);
+    gridPole(2.55,-1.1,.73);
+    routes.push(path([[.9,.15,.64],[.9,.15,1.62],[1.9,.15,1.76],[2.68,.15,1.35],[2.68,.15,-.4],[2.55,.15,-.94]]));
+    tree(-2.65,-1.6,.72); tree(-2.6,1.3,.52);
+  }
+
+  const sun = ball(model,.23,[-2.35,3.15,-.65],m.orange);
+  const cloud = new THREE.Group(); cloud.position.set(.30,3.48,-1.4); model.add(cloud);
+  ball(cloud,.17,[-.20,0,0],m.white); ball(cloud,.24,[0,.07,0],m.white); ball(cloud,.16,[.21,0,0],m.white);
+  const particles = routes.map(() => ball(model,.065,[0,0,0],m.light));
+
+  const media = matchMedia('(prefers-reduced-motion: reduce)');
+  let motion = false, dragging = false, rotation = -.10, targetRotation = -.10;
+  let startX = 0, startRotation = 0, visible = true, disposed = false, time = 0, raf = 0, last = performance.now();
+  const events = [];
+  function listen(target,event,handler) { target.addEventListener(event,handler); events.push(() => target.removeEventListener(event,handler)); }
+  function fit(width,height) {
+    const viewHeight = Math.max(options.zoomHeight ?? 6.6,9.4*height/width);
+    camera.left=-viewHeight*width/height/2; camera.right=-camera.left;
+    camera.top=viewHeight/2; camera.bottom=-camera.top; camera.updateProjectionMatrix();
+  }
+  function resize() {
+    const {width,height}=container.getBoundingClientRect();
+    if (width<=0 || height<=0) return;
+    renderer.setSize(width,height); fit(width,height);
+  }
+  const observer = new ResizeObserver(resize); observer.observe(container); resize();
+  const visibility = new IntersectionObserver(([entry]) => {visible=entry.isIntersecting;}); visibility.observe(container);
+  listen(container,'pointerdown',e=>{if(e.button!==0)return;dragging=true;startX=e.clientX;startRotation=targetRotation;container.setPointerCapture(e.pointerId);});
+  listen(container,'pointermove',e=>{if(dragging)targetRotation=startRotation+(e.clientX-startX)*.006;});
+  for (const event of ['pointerup','pointercancel','lostpointercapture']) listen(container,event,()=>{dragging=false;});
+  // Keyboard access is exposed on the viewport, independently of selection.
+  listen(container,'keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();targetRotation+=(e.key==='ArrowLeft'?-.15:.15);}if(e.key==='Home')targetRotation=-.10;});
+  function frame(now) {
+    if(disposed)return;
+    const dt=Math.max(0,Math.min((now-last)/1000,.05)); last=now;
+    if(visible&&!document.hidden) {
+      if(motion&&!media.matches&&!dragging)time+=dt;
+      // Idle sway shows the model is real 3D; dragging or the keyboard still take over.
+      if(options.sway&&motion&&!media.matches&&!dragging)targetRotation=-.10+Math.sin(time*.45+(options.phase??0))*.32;
+      rotation+=(targetRotation-rotation)*(media.matches?1:1-Math.exp(-10*dt));
+      model.rotation.y=rotation;
+      cloud.position.y=3.48+(motion&&!media.matches?Math.sin(time*.7)*.035:0);
+      sun.position.y=3.15+(motion&&!media.matches?Math.sin(time*.8)*.025:0);
+      particles.forEach((p,i)=>p.position.copy(routes[i].getPoint((time*.12+.3)%1)).add(new THREE.Vector3(0,.04,0)));
+      renderer.render(scene,camera);
+    }
+    raf=requestAnimationFrame(frame);
+  }
+  raf=requestAnimationFrame(frame);
+  return {
+    setMotion(on){motion=Boolean(on);},
+    reset(){targetRotation=-.10;},
+    exportCanvas(width=1600,height=1200) {
+      // Render and copy synchronously; no preserveDrawingBuffer needed.
+      const oldSize=renderer.getSize(new THREE.Vector2()), ratio=renderer.getPixelRatio();
+      try {
+        renderer.setPixelRatio(1); renderer.setSize(width,height,false); fit(width,height);
+        renderer.render(scene,camera);
+        const output=document.createElement('canvas'); output.width=width;output.height=height;
+        output.getContext('2d').drawImage(renderer.domElement,0,0);
+        return output;
+      } finally {
+        renderer.setPixelRatio(ratio);renderer.setSize(oldSize.x,oldSize.y,false);fit(oldSize.x,oldSize.y);
+        renderer.render(scene,camera);
+      }
+    },
+    dispose(){
+      if(disposed)return;disposed=true;cancelAnimationFrame(raf);
+      observer.disconnect();visibility.disconnect();events.forEach(fn=>fn());
+      geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());
+      renderer.dispose();renderer.domElement.remove();
+    },
+  };
+}

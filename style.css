@@ -302,3 +302,10 @@ body:not([data-view=overview]) .body-grid{grid-template-columns:minmax(0,1fr)}
 @media print{.intro{display:none}}
 /* Thai headings: no negative letter spacing, room for tone marks */
 .page-heading h1,.picker-heading h2,.scenario-hero h2,.context-head h2,.product-choice-copy strong{letter-spacing:0;line-height:1.35}
+
+/* ===== V4.6 — EGAT Product Studio V5 models in the product picker ===== */
+.product-choice .product-model{height:118px;margin:0 -6px;width:calc(100% + 12px)}
+.product-choice .product-model #canvas-wrap{position:absolute;inset:0}
+.product-choice .product-model canvas{display:block;width:100%!important;height:100%!important}
+.product-choice:hover .product-model{filter:brightness(1.06)}
+@media(max-width:620px){.product-choice .product-model{height:130px}}

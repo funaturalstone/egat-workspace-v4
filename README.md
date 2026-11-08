@@ -24,7 +24,8 @@
 - `auth.js` — หน้าเข้าสู่ระบบ / สมัคร / โหมดทดลอง
 - `store.js` — เลือกที่เก็บข้อมูล: Supabase (เข้าสู่ระบบ) หรือ localStorage (ทดลอง) · บันทึกแบบหน่วง 0.6 วินาที
 - `workspace-sync.js` — แปลงข้อมูลแอป ↔ แถวในฐานข้อมูล (มีเทสต์)
-- `projects.js` — ตรรกะลูกค้า · `charts.js` `domain/` — แบบจำลองการเงินและกราฟ · `scene.js` — 3D
+- `projects.js` — ตรรกะลูกค้า · `charts.js` `domain/` — แบบจำลองการเงินและกราฟ
+- `product-scene.js` — โมเดล 3D ผลิตภัณฑ์ในหน้าเลือกผลิตภัณฑ์ (จาก EGAT Product Studio V5) · `scene.js` — 3D หน้าแรก
 
 ## เอนจินคำนวณ (`domain/`)
 อิงจาก **BESS Feasibility Model_rev01.xlsx** · ตรวจเทียบทุกค่าด้วย `bess.test.mjs`
