@@ -1,4 +1,5 @@
 // Login gate shown before the workspace opens. Demo mode stays available without an account.
+import { welcome } from './welcome.js';
 const DEMO_KEY = 'egat-v4-mode';
 const $ = s => document.querySelector(s);
 
@@ -9,6 +10,7 @@ export async function chooseMode(supabase) {
     try { sessionStorage.setItem(DEMO_KEY, 'demo'); } catch { /* storage blocked */ }
     url.searchParams.delete('demo');
     history.replaceState(null, '', url.pathname + url.search + url.hash);
+    welcome.start({ mode: 'demo' });
     return { mode: 'demo' };
   }
   if (supabase) {
@@ -31,7 +33,8 @@ function openGate(supabase, resolve) {
     $('#auth-password').autocomplete = s ? 'new-password' : 'current-password';
     say('');
   };
-  const done = value => { gate.hidden = true; document.body.classList.remove('gated'); resolve(value); };
+  // a successful sign-in (or choosing demo) plays the welcome screen before the workspace appears
+  const done = value => { welcome.start({ mode: value.mode, email: value.user?.email || '' }); gate.hidden = true; document.body.classList.remove('gated'); resolve(value); };
 
   gate.hidden = false; document.body.classList.add('gated');
   $('#auth-switch').onclick = () => setMode(!signup);

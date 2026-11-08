@@ -1,6 +1,7 @@
 // Account profile: name, job title, location and photo — each account sees and edits only its own.
 // Signed in: Supabase table `profiles` + private bucket `avatars` (RLS: owner only, files under <user id>/).
 // Demo mode: kept in this browser only.
+import { welcome } from './welcome.js';
 const DEMO_KEY = 'egat-v4-demo-profile';
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -89,6 +90,8 @@ export async function initProfile(supabase, user) {
   let profile;
   try { profile = await loadProfile(supabase, user); }
   catch (error) { console.error(error); profile = { mode: user ? 'cloud' : 'demo', email: user?.email || '', display_name: '', job_title: '', location: '', avatarUrl: null }; }
+
+  if (profile.display_name || profile.avatarUrl) welcome.identify({ name: profile.display_name ? displayName(profile) : '', avatarUrl: profile.avatarUrl });
 
   const chip = document.createElement('button');
   chip.type = 'button'; chip.className = 'profile-chip'; chip.id = 'profile-chip';
