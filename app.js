@@ -125,7 +125,13 @@ function movePill(){const navEl=$('#rail-menu'),active=navEl?.querySelector('.ra
 window.addEventListener('resize',()=>{clearTimeout(movePill.t);movePill.t=setTimeout(()=>{movePill();fitFold();},80);});
 // Overview: size the product cards so the KPI row ends exactly at the bottom of the window (nothing below peeks in).
 const docBottom=el=>{let y=el.offsetHeight,e=el;while(e){y+=e.offsetTop;e=e.offsetParent;}return y;};
-function fitFold(){const root=document.body;if(page!=='overview'||!matchMedia('(min-width:901px)').matches){root.style.removeProperty('--fold-model-h');return;}const grid=$('#content .metric-grid'),model=$('.product-choice .product-model');if(!grid||!model)return;const current=model.offsetHeight,target=innerHeight-6,next=Math.round(Math.max(112,Math.min(420,current+target-docBottom(grid))));if(Math.abs(next-current)>1)root.style.setProperty('--fold-model-h',next+'px');}
+function fitFold(){const root=document.body,props=['--fold-model-h','--kpi-grow','--kpi-extra','--hero-extra'];if(page!=='overview'||!matchMedia('(min-width:901px)').matches){props.forEach(p=>root.style.removeProperty(p));return;}const grid=$('#content .metric-grid'),model=$('.product-choice .product-model');if(!grid||!model)return;
+ // 1) height the cards would need to fill the screen on their own; 2) use 70% of it; 3) give the rest to the KPI cards and banner.
+ props.slice(1).forEach(p=>root.style.setProperty(p,'0px'));const target=innerHeight-6,full=model.offsetHeight+target-docBottom(grid);
+ root.style.setProperty('--fold-model-h',Math.round(Math.max(112,Math.min(300,full*.7)))+'px');
+ let left=target-docBottom(grid);if(left<=0)return;
+ root.style.setProperty('--kpi-grow',Math.round(Math.min(10,left*.05))+'px');left=target-docBottom(grid);if(left<=0)return;
+ const kpi=Math.round(left*.6);root.style.setProperty('--kpi-extra',kpi+'px');root.style.setProperty('--hero-extra',(left-kpi)+'px');}
 function playIntro(){if(welcome.active){try{sessionStorage.setItem('egat-intro','1');}catch{}return;}let seen=false;try{seen=sessionStorage.getItem('egat-intro')==='1';sessionStorage.setItem('egat-intro','1');}catch{}if(seen||reduceMotion())return;const el=document.createElement('div');el.className='intro';el.setAttribute('aria-hidden','true');el.innerHTML='<div class="intro-mark"><svg viewBox="0 0 64 64"><path d="M36.5 7 15 36.5h14.5L26 57l23-31.5H34.2L36.5 7Z"/></svg><b>EGAT</b><small>Energy Feasibility</small></div>';document.body.append(el);setTimeout(()=>el.classList.add('out'),1260);setTimeout(()=>el.remove(),2280);}
 window.addEventListener('hashchange',()=>{const hash=location.hash.slice(1);if(hash!=='content'&&hash!==page)navigate(hash)});addEventListener('welcome:closed',()=>{animateEnter();render();});
 persist();context();playIntro();navigate(location.hash.slice(1)||'overview');requestAnimationFrame(()=>welcome.finish());

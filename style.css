@@ -531,3 +531,10 @@ body[data-view=overview] #rail-menu{margin-bottom:10px}
 @media(min-width:901px){
   body[data-view=overview] .product-choice .product-model{height:var(--fold-model-h,210px)}
 }
+
+/* ===== V4.18 — product cards 30% shorter; KPI cards and banner take the freed space ===== */
+@media(min-width:901px){
+  body[data-view=overview] #content .metric-grid .metric-card{padding-top:calc(12px + var(--kpi-extra,0px) / 2);padding-bottom:calc(12px + var(--kpi-extra,0px) / 2)}
+  body[data-view=overview] #content .metric-grid .metric-value{font-size:calc(26px + var(--kpi-grow,0px))}
+  body[data-view=overview] .scenario-hero{padding-top:calc(12px + var(--hero-extra,0px) / 2);padding-bottom:calc(12px + var(--hero-extra,0px) / 2)}
+}
