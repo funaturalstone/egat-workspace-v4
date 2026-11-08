@@ -494,3 +494,8 @@ body.welcoming{overflow:hidden}
 .table-badge.payback-simple{background:#ffb28b;color:#3a2316}
 .table-badge.payback-discount{background:#2fe39a;color:#0c2a1e}
 @media print{.table-card td.signed.neg{color:#c0001a}.table-card td.signed.pos{color:#00803e}}
+
+/* ===== V4.15 — taller product cards ===== */
+.product-choice .product-model{height:210px}
+@media(max-width:1160px){.product-choice .product-model{height:180px}}
+@media(max-width:620px){.product-choice .product-model{height:200px}}
