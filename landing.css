@@ -221,3 +221,13 @@ a:focus-visible,summary:focus-visible{outline:3px solid var(--orange);outline-of
   .stage-info{top:72px}
   .stage-note{top:160px}
 }
+
+/* ===== frame fits the screen again (900px wide, fills down to the bottom of the window) ===== */
+@media(min-width:901px){
+  .hero{height:calc(100svh - 65px);min-height:520px;padding-top:clamp(10px,2vh,22px);padding-bottom:clamp(12px,2vh,20px)}
+  .hero h1{margin:clamp(4px,1vh,10px) 0 clamp(2px,.6vh,6px)}
+  .hero-sub{margin-bottom:clamp(6px,1.3vh,14px)}
+  .hero-stage{flex:1;height:auto;min-height:320px;max-width:900px;margin-top:clamp(10px,1.8vh,18px)}
+  .stage-info{top:clamp(50px,7vh,70px)}
+  .stage-note{top:clamp(80px,13vh,150px)}
+}

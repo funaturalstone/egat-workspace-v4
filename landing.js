@@ -57,7 +57,7 @@ function showProduct(next) {
 const FOCUS = { solar: ['solar'], hybrid: ['solar', 'battery'], battery: ['battery'] };
 try {
   const wide = matchMedia('(min-width: 901px)').matches;
-  current = mountProductScene(view, 'all', { sway: true, lookY: wide ? 1.75 : 1.1, zoomHeight: wide ? 8.2 : 6.4, shiftX: wide ? .26 : 0 });
+  current = mountProductScene(view, 'all', { sway: true, lookY: wide ? 1.45 : 1.1, zoomHeight: wide ? 6.2 : 6.4, shiftX: wide ? .27 : 0 });
   current.setMotion(moving);
 } catch { stage.classList.add('no-webgl'); }
 stage.querySelectorAll('[data-stage]').forEach(b => b.addEventListener('click', () => { if (b.dataset.stage !== product) showProduct(b.dataset.stage); }));
