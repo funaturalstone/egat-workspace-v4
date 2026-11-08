@@ -362,3 +362,10 @@ body:not([data-view=overview]) .body-grid{grid-template-columns:minmax(0,1fr)}
 @media(max-width:620px){.profile-chip span:last-child{display:none}.profile-chip{padding:3px}.profile-body{flex-direction:column;align-items:flex-start}.profile-text{padding-top:0}}
 @media print{.profile-chip{display:none}}
 .avatar-icon{width:62%;height:62%;fill:none;stroke:#263043;stroke-width:1.9;stroke-linecap:round}
+
+/* login: back to the landing page */
+.auth-card{position:relative}
+.auth-home{position:absolute;top:18px;right:18px;display:flex;align-items:center;gap:6px;height:34px;padding:0 12px 0 10px;border-radius:999px;border:1px solid #ffffff1f;background:#ffffff08;color:#c9d8e6;font-size:12px;text-decoration:none;transition:color .22s,border-color .22s,background .22s}
+.auth-home svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.auth-home:hover{color:var(--orange);border-color:#ffb28b55;background:#ffb28b10}
+.auth-home:focus-visible{outline:3px solid var(--orange);outline-offset:3px}
