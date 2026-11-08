@@ -499,3 +499,30 @@ body.welcoming{overflow:hidden}
 .product-choice .product-model{height:210px}
 @media(max-width:1160px){.product-choice .product-model{height:180px}}
 @media(max-width:620px){.product-choice .product-model{height:200px}}
+
+/* ===== V4.16 — drop the small English kickers so the KPI row fits the first screen ===== */
+#page-kicker{display:none!important}
+body[data-view=overview] .page-heading{display:none}
+body[data-view=overview] #rail-menu{margin-bottom:12px}
+.decision-panel{padding:9px 14px;gap:12px}
+.decision-panel .decision-controls small{display:none}
+.decision-panel h3{margin:0}
+.decision-panel p{margin:2px 0 0}
+.scenario-hero{padding:13px 18px;align-items:center}
+.scenario-hero h2{margin:3px 0 2px}
+.scenario-meta{margin-top:6px}
+.scenario-invest strong{margin-bottom:2px}
+.metric-grid .metric-card{min-height:0;padding:12px 14px}
+.metric-grid .metric-value{margin:7px 0 3px}
+.scenario-hero .scenario-copy>p{display:none}
+#content .metric-grid .metric-footer{display:none}
+#content .metric-grid .irr-compare{margin-top:4px}
+.scenario-hero .eyebrow{display:none}
+.scenario-hero{padding:12px 18px;margin-bottom:10px}
+.scenario-invest .chart-toggle{min-height:26px;padding:3px 10px}
+.decision-panel{margin-bottom:10px}
+body[data-view=overview] #rail-menu{margin-bottom:10px}
+#content .metric-grid .irr-compare{margin-top:2px;height:26px}
+.topbar{padding-bottom:10px}
+.product-picker{margin-top:8px}
+.picker-heading{margin-bottom:7px}
