@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import { freshWorkspace, validWorkspace, storageKey } from './projects.js';
 import { toRows, toSettings, fromRows, removedIds } from './workspace-sync.js';
 import { chooseMode, showSignedIn } from './auth.js';
+import { initProfile } from './profile.js';
 
 const url = import.meta.env.VITE_SUPABASE_URL, key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 export const supabase = url && key ? createClient(url, key) : null;
@@ -79,8 +80,9 @@ async function cloudWorkspace(user) {
 
 export async function openWorkspace() {
   const choice = await chooseMode(supabase);
-  if (choice.mode === 'demo') { showSignedIn(null, supabase); return demoWorkspace(); }
+  if (choice.mode === 'demo') { showSignedIn(null, supabase); initProfile(null, null); return demoWorkspace(); }
   showSignedIn(choice.user, supabase);
+  initProfile(supabase, choice.user);
   try {
     return await cloudWorkspace(choice.user);
   } catch (error) {

@@ -22,6 +22,7 @@
 - `index.html` `landing.js` `landing.css` — หน้าแรก (landing) · ปุ่มทดลองใช้งานเปิด `/app?demo`
 - `app.html` `app.js` `style.css` — พื้นที่ทำงาน (`/app` · Vercel cleanUrls ตัด .html)
 - `auth.js` — หน้าเข้าสู่ระบบ / สมัคร / โหมดทดลอง
+- `profile.js` — โปรไฟล์ของแต่ละบัญชี (ชื่อ ตำแหน่ง สถานที่ รูป) · โหมดทดลองเก็บในเบราว์เซอร์
 - `store.js` — เลือกที่เก็บข้อมูล: Supabase (เข้าสู่ระบบ) หรือ localStorage (ทดลอง) · บันทึกแบบหน่วง 0.6 วินาที
 - `workspace-sync.js` — แปลงข้อมูลแอป ↔ แถวในฐานข้อมูล (มีเทสต์)
 - `projects.js` — ตรรกะลูกค้า · `charts.js` `domain/` — แบบจำลองการเงินและกราฟ
@@ -53,6 +54,7 @@ computeScenario(bessScenario('max', { sizeKwh: 1000 }));  // ปรับสม�
 ## ฐานข้อมูล
 - `client_projects` (owner, id, product, name, scenario jsonb, position)
 - `workspace_settings` (owner, selected, active)
+- `profiles` (owner, display_name, job_title, location, avatar_path) · รูปโปรไฟล์อยู่ใน bucket ส่วนตัว `avatars/<user id>/` (ย่อเป็น 320×320 ก่อนอัปโหลด)
 - เปิด RLS ทุกตาราง: ผู้ใช้ที่เข้าสู่ระบบอ่าน/เขียนได้เฉพาะแถวของตัวเอง · ผู้ไม่เข้าสู่ระบบเข้าถึงไม่ได้
 
 ## รันในเครื่อง
@@ -62,7 +64,7 @@ npm install
 #   VITE_SUPABASE_URL=https://hdreqbadncphcxlyxfrh.supabase.co
 #   VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 npm run dev      # http://localhost:5193
-npm test         # 22 tests
+npm test         # 24 tests
 npm run build
 ```
 ใช้เฉพาะ publishable key ฝั่งหน้าเว็บ ห้ามใส่ service_role / secret key

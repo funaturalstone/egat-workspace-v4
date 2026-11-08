@@ -328,3 +328,37 @@ body:not([data-view=overview]) .body-grid{grid-template-columns:minmax(0,1fr)}
   .chart .gap-tag{animation:pop-in .54s 1.08s cubic-bezier(.2,.9,.3,1.3) both;transform-box:fill-box;transform-origin:center}
 }
 @keyframes gap-in{from{opacity:0}to{opacity:1}}
+
+/* ===== V4.9 — account profile: photo + name per account ===== */
+.avatar{display:inline-grid;place-items:center;flex-shrink:0;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,#ffd2a7,#f3a387);color:#263043;font-weight:800;letter-spacing:.02em}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.avatar.sm{width:28px;height:28px;font-size:11px}
+.avatar.md{width:36px;height:36px;font-size:13px}
+.avatar.xl{width:88px;height:88px;font-size:28px;border:4px solid #fff;box-shadow:0 10px 26px #0005}
+.profile-chip{display:flex;align-items:center;gap:8px;max-width:210px;height:36px;padding:3px 12px 3px 4px;border-radius:999px;border:1px solid var(--line);background:#ffffff06;color:#dbe6f2;font-size:11px;cursor:pointer;transition:border-color .22s,background .22s}
+.profile-chip span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.profile-chip:hover{border-color:#ffb28b55;background:#ffb28b10}
+.account-profile{display:flex;align-items:center;gap:10px;width:100%;padding:6px;margin:0 0 6px;border-radius:12px;background:none;border:0;color:inherit;text-align:left;cursor:pointer}
+.account-profile:hover{background:#ffffff09}
+.account-profile span:last-child{display:grid;min-width:0}
+.account-profile b{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#eef2f8}
+.account-profile small{font-size:10px;color:#9db0c2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#profile-dialog{width:min(520px,94vw)}
+.profile-form{display:grid;gap:12px}
+.profile-card{border-radius:18px;overflow:hidden;background:#f6faf9;color:#18263a;box-shadow:0 12px 30px #0004}
+.profile-cover{height:64px;background:radial-gradient(ellipse at 80% 0,#f3a38766,transparent 60%),linear-gradient(120deg,#163f37,#1f3550)}
+.profile-body{display:flex;align-items:center;gap:16px;padding:0 20px 18px;margin-top:-34px}
+.profile-text{min-width:0;padding-top:34px}
+.profile-text h2{margin:0;font-size:20px;line-height:1.35;color:#132235;overflow-wrap:anywhere}
+.profile-text p{margin:2px 0 6px;font-size:12px;color:#425a70}
+.profile-meta{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:11px;color:#5d7287}
+.profile-meta i{font-style:normal;color:#9aaab9}
+.profile-photo-row{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.profile-photo-row .button{font-size:12px;padding:9px 14px;cursor:pointer}
+.profile-photo-row small{font-size:10px;color:#86a0ba}
+.profile-form .field input{width:100%;border:1px solid #ffffff25;border-radius:10px;background:#101d30;color:#e7eff7;font-size:14px;padding:11px 12px;margin-top:4px}
+.profile-message{min-height:16px;margin:0;font-size:11px;color:#9fb6cc}
+.profile-message[data-kind=error]{color:var(--orange)}
+@media(max-width:620px){.profile-chip span:last-child{display:none}.profile-chip{padding:3px}.profile-body{flex-direction:column;align-items:flex-start}.profile-text{padding-top:0}}
+@media print{.profile-chip{display:none}}
+.avatar-icon{width:62%;height:62%;fill:none;stroke:#263043;stroke-width:1.9;stroke-linecap:round}
