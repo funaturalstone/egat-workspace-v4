@@ -1,0 +1,19 @@
+{
+  "name": "egat-workspace-v4",
+  "private": true,
+  "version": "0.4.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5193 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --port 5194",
+    "test": "node --test projects.test.mjs store.test.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.0",
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "vite": "^6.4.5"
+  }
+}
