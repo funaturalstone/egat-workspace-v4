@@ -213,3 +213,11 @@ a:focus-visible,summary:focus-visible{outline:3px solid var(--orange);outline-of
   .stage-desc{font-size:11px}
   .stage-stats dd{font-size:14px}
 }
+
+/* ===== frame back to the original width and extended downward ===== */
+@media(min-width:901px){
+  .hero{height:auto;min-height:0}
+  .hero-stage{flex:none;max-width:900px;height:clamp(640px,82vh,780px);max-height:none}
+  .stage-info{top:72px}
+  .stage-note{top:160px}
+}
