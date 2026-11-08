@@ -479,3 +479,18 @@ body.welcoming{overflow:hidden}
   .ws-status.ok .ws-status-label{animation:pop-in .42s cubic-bezier(.2,.9,.3,1.4)}
   .ws-status.ok .ws-status-check{stroke-dasharray:24;stroke-dashoffset:24;animation:ws-draw .4s .1s forwards}
 }
+
+/* ===== V4.14 — cash-flow table reads like financial figures ===== */
+.table-card td.signed{font-weight:600;font-variant-numeric:tabular-nums}
+.table-card td.signed.neg{color:#ff5a6e}
+.table-card td.signed.pos{color:#2fe39a}
+.table-card tr.simple-row td{background:#ffb28b1f;border-top:1px solid #ffb28b66;border-bottom:1px solid #ffb28b66}
+.table-card tr.simple-row td:first-child{box-shadow:inset 4px 0 #ffb28b}
+.table-card tr.discount-row td{background:#2fe39a1a;border-top:1px solid #2fe39a59;border-bottom:1px solid #2fe39a59}
+.table-card tr.discount-row td:first-child{box-shadow:inset 4px 0 #2fe39a}
+.table-card tr.simple-row.discount-row td:first-child{box-shadow:inset 4px 0 #ffb28b,inset 8px 0 #2fe39a}
+.table-card tr.simple-row td,.table-card tr.discount-row td{font-weight:600}
+.table-badge.payback-simple,.table-badge.payback-discount{display:inline-flex;align-items:center;margin-left:10px;padding:3px 9px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.01em;white-space:nowrap}
+.table-badge.payback-simple{background:#ffb28b;color:#3a2316}
+.table-badge.payback-discount{background:#2fe39a;color:#0c2a1e}
+@media print{.table-card td.signed.neg{color:#c0001a}.table-card td.signed.pos{color:#00803e}}
