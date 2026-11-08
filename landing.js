@@ -51,13 +51,15 @@ function showProduct(next) {
   $s('stage-stats').innerHTML = `<div><dt>IRR</dt><dd>${pct(res.irr)}</dd></div><div><dt>คืนทุน</dt><dd>${years(res.payback)}</dd></div><div><dt>เงินลงทุน</dt><dd>${(res.scenario.initial_investment / 1e6).toFixed(2)} ลบ.</dd></div>`;
   stage.querySelectorAll('[data-stage]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.stage === next)));
   stage.classList.remove('swap'); void stage.offsetWidth; stage.classList.add('swap');
-  try {
-    current?.dispose();
-    const wide = matchMedia('(min-width: 901px)').matches;
-    current = mountProductScene(view, next, { sway: true, lookY: wide ? 1.0 : 1.1, zoomHeight: wide ? 8.6 : 6.8, shiftX: wide ? .2 : 0 });
-    current.setMotion(moving);
-  } catch { stage.classList.add('no-webgl'); }
+  current?.setFocus(FOCUS[next]);
 }
+// One scene with all three products (like the main site's landing); the tabs light up the matching parts.
+const FOCUS = { solar: ['solar'], hybrid: ['solar', 'battery'], battery: ['battery'] };
+try {
+  const wide = matchMedia('(min-width: 901px)').matches;
+  current = mountProductScene(view, 'all', { sway: true, lookY: wide ? 1.45 : 1.1, zoomHeight: wide ? 5.6 : 6.4, shiftX: wide ? .16 : 0 });
+  current.setMotion(moving);
+} catch { stage.classList.add('no-webgl'); }
 stage.querySelectorAll('[data-stage]').forEach(b => b.addEventListener('click', () => { if (b.dataset.stage !== product) showProduct(b.dataset.stage); }));
 $s('stage-reset').addEventListener('click', () => current?.reset());
 $s('stage-motion').addEventListener('click', e => {

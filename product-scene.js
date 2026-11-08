@@ -6,12 +6,14 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
  * option (options.shadowSize) so three cards can run side by side.
  *
  * Real geometry, local dependencies, no textures or external services.
- * Returns { exportCanvas(width, height), setMotion(on), reset(), dispose() }.
+ * Returns { exportCanvas(width, height), setMotion(on), setFocus(parts), reset(), dispose() }.
+ * product 'all' puts solar, battery and grid on one platform (the landing page); setFocus(['solar','battery'])
+ * lifts those parts and lights the deck under them.
  * Each instance owns its geometry, renderer and event listeners.
  */
 export function mountProductScene(container, product = 'solar', options = {}) {
   options = { ...options, swayInitial: options.sway };
-  if (!['solar', 'hybrid', 'battery'].includes(product)) throw new Error('Unknown product');
+  if (!['solar', 'hybrid', 'battery', 'all'].includes(product)) throw new Error('Unknown product');
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -147,9 +149,10 @@ export function mountProductScene(container, product = 'solar', options = {}) {
       }
     }
     ball(group,.09,[0,2.55,0],m.white);
+    return group;
   }
 
-  const routes = [];
+  const routes = [], parts = {};
   if (product === 'solar') {
     // Panels occupy the hero area. The inverter is deliberately secondary.
     solarArray(-.40,-.15,4.65,2.9);
@@ -165,6 +168,14 @@ export function mountProductScene(container, product = 'solar', options = {}) {
     batteryBank(1.40,-.35,2,2.18,.92);
     routes.push(path([[-1.8,.15,1.4],[-1.8,.15,1.86],[-.7,.15,1.91],[1.25,.15,1.91],[1.4,.15,1.15],[1.4,.15,.45]]));
     tree(-2.8,-1.75,.78); tree(2.8,1.65,.55);
+  } else if (product === 'all') {
+    // Landing page: all three products on one platform, joined by cables (solar → battery → grid).
+    parts.solar = solarArray(-1.75,.25,2.45,2.35);
+    parts.battery = batteryBank(.85,-.55,2,2.25,.9);
+    parts.grid = gridPole(2.68,-1.4,.7);
+    routes.push(path([[-1.75,.15,1.45],[-1.75,.15,1.86],[-.35,.15,1.92],[.85,.15,1.75],[.85,.15,.32]]));
+    routes.push(path([[1.88,.15,-.5],[2.3,.15,-.55],[2.68,.15,-.85],[2.68,.15,-1.15]]));
+    tree(-2.9,-1.75,.7); tree(2.85,1.7,.55);
   } else {
     // Storage is the unmistakable hero, with only a small grid connection behind it.
     batteryBank(-.28,-.12,3,2.75,1.05);
@@ -173,6 +184,13 @@ export function mountProductScene(container, product = 'solar', options = {}) {
     tree(-2.65,-1.6,.72); tree(-2.6,1.3,.52);
   }
 
+  const focus = Object.entries(parts).map(([key,group]) => {
+    const bounds = new THREE.Box3().setFromObject(group), size = bounds.getSize(new THREE.Vector3()), center = bounds.getCenter(new THREE.Vector3());
+    const mat = new THREE.MeshStandardMaterial({ color:'#ffb48d', emissive:'#ff9a66', emissiveIntensity:.7, transparent:true, opacity:0, roughness:.4 }); materials.add(mat);
+    const ring = box(model,[size.x+.34,.03,size.z+.34],[center.x,.115,center.z],mat,.14); ring.castShadow = false;
+    return { key, group, ring, baseY: group.position.y, lift: 0, glow: 0 };
+  });
+  let focusKeys = [];
   const sun = ball(model,.23,[-2.35,3.15,-.65],m.orange);
   const cloud = new THREE.Group(); cloud.position.set(.30,3.48,-1.4); model.add(cloud);
   ball(cloud,.17,[-.20,0,0],m.white); ball(cloud,.24,[0,.07,0],m.white); ball(cloud,.16,[.21,0,0],m.white);
@@ -211,6 +229,8 @@ export function mountProductScene(container, product = 'solar', options = {}) {
       model.rotation.y=rotation;
       cloud.position.y=3.48+(motion&&!media.matches?Math.sin(time*.58)*.035:0);
       sun.position.y=3.15+(motion&&!media.matches?Math.sin(time*.67)*.025:0);
+      const ease=media.matches?1:1-Math.exp(-7*dt);
+      focus.forEach(f=>{const on=focusKeys.includes(f.key);f.lift+=((on?.2:0)-f.lift)*ease;f.glow+=((on?.5:0)-f.glow)*ease;f.group.position.y=f.baseY+f.lift;f.ring.material.opacity=f.glow;});
       particles.forEach((p,i)=>p.position.copy(routes[i].getPoint((time*.1+.3)%1)).add(new THREE.Vector3(0,.04,0)));
       renderer.render(scene,camera);
     }
@@ -219,6 +239,7 @@ export function mountProductScene(container, product = 'solar', options = {}) {
   raf=requestAnimationFrame(frame);
   return {
     setMotion(on){motion=Boolean(on);},
+    setFocus(keys=[]){focusKeys=[...keys];},
     reset(){targetRotation=-.10;options.sway=Boolean(options.swayInitial??options.sway);},
     exportCanvas(width=1600,height=1200) {
       // Render and copy synchronously; no preserveDrawingBuffer needed.

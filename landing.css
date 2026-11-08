@@ -154,7 +154,6 @@ a:focus-visible,summary:focus-visible{outline:3px solid var(--orange);outline-of
   .hero-stage{animation:rise-3d 1.44s cubic-bezier(.2,.8,.2,1) .36s both}
   .hero-stage.swap .stage-info,.hero-stage.swap .stage-note{animation:rise .864s cubic-bezier(.2,.8,.2,1) both}
   .hero-stage.swap .stage-note{animation-delay:.144s}
-  .hero-stage.swap .stage-view{animation:fade .72s ease both}
   .stage-note{animation:float 6.48s ease-in-out infinite}
   .hero-stage.paused .stage-note{animation-play-state:paused}
 }
@@ -172,3 +171,32 @@ a:focus-visible,summary:focus-visible{outline:3px solid var(--orange);outline-of
   .stage-title{font-size:30px}
 }
 @media(max-width:480px){.stage-tab{padding:7px 9px;font-size:10px}.stage-note{display:none}}
+
+/* ===== First screen fits the viewport: hero text + framed 3D stage, no scrolling needed (desktop) ===== */
+@media(min-width:901px){
+  .lnav{padding-top:12px;padding-bottom:12px}
+  .hero{height:calc(100svh - 65px);min-height:600px;display:flex;flex-direction:column;padding:clamp(14px,2.6vh,30px) clamp(16px,4vw,48px) clamp(14px,2.4vh,26px)}
+  .hero-head{flex:none}
+  .hero-badge{font-size:11px;padding:5px 12px}
+  .hero h1{font-size:clamp(30px,min(4vw,6.2vh),54px);margin:clamp(8px,1.6vh,16px) 0 clamp(6px,1.2vh,12px);line-height:1.38}
+  .hero-sub{font-size:clamp(13px,1.9vh,16px);line-height:1.7;margin-bottom:clamp(10px,2vh,20px)}
+  .lbtn.lg{min-height:44px;padding:10px 20px}
+  .hero-helper{margin-top:clamp(6px,1.2vh,12px)}
+  .hero-stage{flex:1;height:auto;min-height:340px;max-height:640px;width:100%;margin-top:clamp(12px,2.2vh,24px)}
+  .stage-info{top:clamp(52px,7vh,72px)}
+  .stage-title{font-size:clamp(26px,4.2vh,38px);margin:clamp(6px,1.2vh,14px) 0 clamp(4px,.8vh,10px)}
+  .stage-desc{font-size:12px;line-height:1.75}
+  .stage-stats{margin-top:clamp(8px,1.4vh,16px)}
+  .stage-note{top:clamp(80px,14vh,150px)}
+}
+@media(min-width:901px) and (max-height:760px){
+  .stage-detail{display:none}
+  .stage-desc{line-height:1.6}
+}
+@media(min-width:901px){.hero{min-height:500px}.hero-stage{min-height:300px}}
+@media(min-width:901px) and (max-height:720px){
+  .hero-helper{display:none}
+  .hero-badge{display:none}
+  .stage-info{top:46px}
+  .stage-stats{margin-top:6px}
+}
