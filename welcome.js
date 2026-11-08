@@ -16,9 +16,15 @@ let el = null, startedAt = 0, done = 0, finishing = null, target = -1, timer = n
 function close(resolve) {
   const node = el; el = null; finishing = null; ready = false; skip = false;
   clearTimeout(timer); timer = null;
-  node.classList.add('out');
-  document.body.classList.remove('welcoming');
-  setTimeout(() => { node.remove(); resolve?.(); }, reduce() ? 200 : 900);
+  node.classList.add('leaving');                      // button press + card confirm pulse
+  setTimeout(() => {
+    node.classList.add('out');                        // sheet slides up and away
+    document.body.classList.remove('welcoming');
+    document.body.classList.add('dashboard-in');      // workspace rises in underneath
+    dispatchEvent(new CustomEvent('welcome:closed')); // app replays cards, count-up and charts
+    setTimeout(() => { node.remove(); resolve?.(); }, reduce() ? 0 : 900);
+    setTimeout(() => document.body.classList.remove('dashboard-in'), 1400);
+  }, reduce() ? 0 : 260);
 }
 
 export const welcome = {
@@ -43,7 +49,7 @@ export const welcome = {
         ${Array.from({ length: 10 }, (_, i) => `<span class="ws-spark" style="--a:${i * 36}deg;--d:${i % 2 ? 78 : 96}px;--s:${i % 3 ? 6 : 9}px"></span>`).join('')}
         <svg class="ws-check" viewBox="0 0 96 96"><defs><linearGradient id="ws-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ff0c4"/><stop offset="1" stop-color="#2fbf86"/></linearGradient></defs><circle cx="48" cy="48" r="44" fill="url(#ws-g)"/><path d="M29 49.5 42 62 67 35"/></svg>
       </div>
-      <h2 class="ws-title">${demo ? 'เปิดโหมดทดลองสำเร็จ' : 'เข้าสู่ระบบสำเร็จ'}</h2>
+      <h2 class="ws-title">${demo ? 'Demo mode ready' : 'Login successful'}</h2>
       <p class="ws-sub">${demo ? 'ยินดีต้อนรับ · ข้อมูลตัวอย่างเก็บในเบราว์เซอร์นี้' : 'ยินดีต้อนรับกลับ คุณ<b class="welcome-name">' + esc(name) + '</b>'}</p>
       <div class="ws-card">
         <div class="ws-account"><span class="welcome-avatar">${demo ? PERSON : esc(mark(name)) || PERSON}</span><div><b class="ws-account-name">${esc(name)}</b><small>${demo ? 'โหมดทดลอง' : esc(email)}</small></div><span class="ws-badge">${demo ? 'DEMO' : 'CLOUD'}</span></div>

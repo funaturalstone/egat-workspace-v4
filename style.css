@@ -454,3 +454,14 @@ body.welcoming{overflow:hidden}
 @keyframes ws-card-up{from{opacity:0;transform:translateY(40px) scale(.96)}to{opacity:1;transform:none}}
 @keyframes ws-spin{to{transform:rotate(360deg)}}
 @media(max-height:640px){.ws-burst{width:100px;height:100px;margin-bottom:8px}.ws-check{width:72px;height:72px}.ws-sub{margin-bottom:10px}}
+
+/* ===== V4.12 — fintech entry: success sheet slides up, dashboard rises in ===== */
+.welcome{border-radius:0 0 28px 28px;will-change:transform}
+.welcome.out{opacity:1;transform:translateY(-104%);transition:transform .78s cubic-bezier(.76,0,.24,1)}
+.welcome.leaving .ws-enter{transform:scale(.96);filter:brightness(1.08)}
+.welcome.leaving .ws-card{transform:scale(1.02);transition:transform .26s cubic-bezier(.2,.9,.3,1.4)}
+@media(prefers-reduced-motion:no-preference){
+  body.dashboard-in .app-shell{animation:dash-in .9s cubic-bezier(.2,.85,.25,1) .12s both}
+}
+@keyframes dash-in{from{transform:translateY(70px) scale(.97);opacity:.0}60%{opacity:1}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){.welcome.out{transform:none;opacity:0;transition:opacity .2s}}
