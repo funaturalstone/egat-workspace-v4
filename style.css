@@ -245,3 +245,60 @@ body:not([data-view=overview]) .body-grid{grid-template-columns:minmax(0,1fr)}
 .metric-grid .metric-note{font-size:9px}
 @media(max-width:1160px){.metric-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:620px){.metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.metric-grid .metric-card:last-child{grid-column:1/-1}.scenario-hero{flex-direction:column;align-items:flex-start}.scenario-invest{align-items:flex-start;text-align:left}}
+
+/* ===== V4.5 — click-for-details on every chart ===== */
+.chart text,.chart line,.chart polyline,.chart polygon,.chart circle:not([data-pick]):not(.seg),.chart rect:not([data-pick]):not(.hit){pointer-events:none}
+.chart [data-pick]{cursor:pointer}
+.chart .hit{transition:fill .2s}
+.chart .hit:hover{fill:#ffffff07}
+.chart .hit.picked{fill:#ffb28b14}
+.chart .pt{opacity:0;transition:opacity .2s,r .2s}
+.chart .pt.picked{opacity:1}
+.chart .pt.picked{r:6}
+.chart .bar{transition:opacity .25s,filter .25s}
+.chart.has-pick .bar:not(.picked){opacity:.38}
+.chart .bar.picked{filter:brightness(1.18) drop-shadow(0 0 6px #ffb28b66)}
+[data-fit-chart]:focus-visible{outline:2px solid #ffb28b88;outline-offset:4px;border-radius:10px}
+.pick-detail{margin-top:10px}
+
+/* ===== V4.5 — motion like the reference reel ===== */
+@media(prefers-reduced-motion:no-preference){
+  /* cards arrive as placeholders, then their content fades and slides in one after another */
+  #content.entering .card{position:relative;animation:card-in .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 70ms)}
+  #content.entering .card::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:3;background:linear-gradient(100deg,#1b2b43 30%,#24384f 50%,#1b2b43 70%) 0 0/250% 100%,#1b2b43;animation:skeleton .75s ease-in-out both;animation-delay:calc(var(--i,0) * 70ms)}
+  .decision-panel,.page-heading{animation:card-in .5s cubic-bezier(.2,.8,.2,1) both}
+  .product-choice{animation:card-in .55s cubic-bezier(.2,.8,.2,1) both}
+  .product-choice:nth-child(2){animation-delay:.07s}.product-choice:nth-child(3){animation-delay:.14s}
+  .nav-mini .nav-ini{animation:pop-in .45s cubic-bezier(.2,.9,.3,1.3) both}
+  .nav-mini .nav-ini:nth-child(2){animation-delay:.06s}.nav-mini .nav-ini:nth-child(3){animation-delay:.12s}.nav-mini .nav-ini:nth-child(4){animation-delay:.18s}
+  .irr-compare i{transform-origin:bottom;animation:bar-grow .7s cubic-bezier(.2,.7,.2,1) .25s both}
+  .cost-detail{animation:detail-in .35s cubic-bezier(.2,.8,.2,1) both}
+  /* hover lift, like whileHover y:-5 */
+  .metric-card,.scenario-hero,.context-block,.product-choice{transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s,border-color .25s}
+  .metric-card:hover{transform:translateY(-4px);box-shadow:0 14px 30px #0000003a;border-color:#ffb28b33}
+  .chart-card{transition:box-shadow .25s,border-color .25s}
+  .chart-card:hover{box-shadow:0 12px 32px #0000002e;border-color:#bcd2ec26}
+  /* sliding tab highlight */
+  .nav-pill{transition:left .4s cubic-bezier(.2,.8,.2,1),width .4s cubic-bezier(.2,.8,.2,1),top .4s}
+}
+@keyframes card-in{from{opacity:0;transform:translateY(16px) scale(.985);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes skeleton{0%{opacity:1;background-position:100% 0}70%{opacity:1;background-position:0 0}100%{opacity:0;background-position:0 0}}
+@keyframes pop-in{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+@keyframes detail-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.analysis-nav.has-pill{position:relative}
+.nav-pill{position:absolute;z-index:0;border-radius:9px;background:linear-gradient(115deg,#f5c19a,#eda589);box-shadow:0 4px 14px #e8a27b24;pointer-events:none}
+.analysis-nav.has-pill .rail-button{position:relative;z-index:1}
+.analysis-nav.has-pill .rail-button.active{background:none;box-shadow:none}
+
+/* one-time intro: mark draws in, then a curved wipe reveals the workspace */
+.intro{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 60%,#1f3550,#0c1321 70%);clip-path:circle(150% at 0 100%);transition:clip-path .85s cubic-bezier(.7,0,.2,1)}
+.intro.out{clip-path:circle(0% at 0 100%)}
+.intro-mark{display:grid;justify-items:center;gap:6px;color:#eef2f8}
+.intro-mark svg{width:58px;height:58px;fill:none;stroke:#ffc39a;stroke-width:2.2;stroke-linejoin:round;stroke-dasharray:190;stroke-dashoffset:190;animation:draw-mark .9s cubic-bezier(.4,0,.2,1) forwards,fill-mark .35s .75s forwards}
+.intro-mark b{font-size:22px;letter-spacing:.3em;margin-top:8px;opacity:0;animation:card-in .5s .35s cubic-bezier(.2,.8,.2,1) forwards}
+.intro-mark small{font-size:10px;letter-spacing:.2em;color:#9fb2c9;opacity:0;animation:card-in .5s .5s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes draw-mark{to{stroke-dashoffset:0}}
+@keyframes fill-mark{to{fill:#f3a387}}
+@media print{.intro{display:none}}
+/* Thai headings: no negative letter spacing, room for tone marks */
+.page-heading h1,.picker-heading h2,.scenario-hero h2,.context-head h2,.product-choice-copy strong{letter-spacing:0;line-height:1.35}
