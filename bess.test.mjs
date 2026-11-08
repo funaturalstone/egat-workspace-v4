@@ -58,3 +58,11 @@ test('installation cost scales with BESS size (workbook B16 hard-codes 500 kWh)'
   assert.equal(b.systemCost, 3630000);
   assert.equal(b.installCost, 5000000);
 });
+
+test('platform Battery samples are the workbook min and max cases', async () => {
+  const { freshWorkspace, template } = await import('./projects.js');
+  const battery = freshWorkspace().projects.filter(p => p.product === 'battery').map(p => computeScenario(p.scenario));
+  near(battery[0].npv, 3133435.5502, 0.01, 'battery client 1 = Summary_min NPV');
+  near(battery[1].npv, 601413.4213, 0.01, 'battery client 2 = Summary_max NPV');
+  near(computeScenario(template('battery')).npv, 3133435.5502, 0.01, 'new / reset battery client = min case');
+});

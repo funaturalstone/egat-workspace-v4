@@ -1,10 +1,12 @@
 import {DEMO_SCENARIOS} from './domain/demoData.js';
+import {bessScenario} from './domain/bess.js';
 const sources={solar:'demo-solar',hybrid:'demo-hybrid',battery:'demo-bess'};
 export const productIds=Object.keys(sources);
-export const template=id=>({...DEMO_SCENARIOS.find(s=>s.id===sources[id])});
+// Battery numbers come from the Excel BESS model (domain/bess.js, 'min' or 'max' cost case); other products keep their demo scenarios
+export const template=(id,level='min')=>({...DEMO_SCENARIOS.find(s=>s.id===sources[id]),...(id==='battery'?{...bessScenario(level),note:'BESS Feasibility Model_rev01.xlsx · '+level}:{})});
 const uid=()=>globalThis.crypto?.randomUUID?.()??'project-'+Date.now()+'-'+Math.random().toString(36).slice(2);
 export function freshWorkspace(){
- const projects=productIds.flatMap(product=>Array.from({length:product==='solar'?4:2},(_,i)=>({id:uid(),product,name:`ลูกค้าคนที่ ${i+1}`,scenario:template(product)})));
+ const projects=productIds.flatMap(product=>Array.from({length:product==='solar'?4:2},(_,i)=>({id:uid(),product,name:`ลูกค้าคนที่ ${i+1}`,scenario:template(product,product==='battery'&&i===1?'max':'min')})));
  return {version:1,selected:'solar',projects,active:Object.fromEntries(productIds.map(p=>[p,projects.find(s=>s.product===p).id]))};
 }
 export const activeProject=(state,product=state.selected)=>state.projects.find(p=>p.product===product&&p.id===state.active[product])??null;
