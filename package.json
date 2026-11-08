@@ -7,7 +7,7 @@
     "dev": "vite --port 5193 --strictPort",
     "build": "vite build",
     "preview": "vite preview --port 5194",
-    "test": "node --test projects.test.mjs store.test.mjs"
+    "test": "node --test projects.test.mjs store.test.mjs bess.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.119.0",

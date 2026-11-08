@@ -25,6 +25,27 @@
 - `workspace-sync.js` — แปลงข้อมูลแอป ↔ แถวในฐานข้อมูล (มีเทสต์)
 - `projects.js` — ตรรกะลูกค้า · `charts.js` `domain/` — แบบจำลองการเงินและกราฟ · `scene.js` — 3D
 
+## เอนจินคำนวณ (`domain/`)
+อิงจาก **BESS Feasibility Model_rev01.xlsx** · ตรวจเทียบทุกค่าด้วย `bess.test.mjs`
+
+| ไฟล์ | ทำอะไร | ตรงกับชีต Excel |
+|---|---|---|
+| `domain/bess.js` | ขนาด BESS + ต้นทุน/kWh + ค่าไฟ → เงินลงทุน, ผลประหยัดปีแรก, มูลค่าซาก | `BESS`, `Inputs_min/max` |
+| `domain/model.js` | กระแสเงินสดรายปี + เรียกสูตรการเงิน | `Cash Flow_min/max` |
+| `domain/finance.js` | NPV, IRR, Payback (ปกติ/คิดลด), LCOE | `Summary_min/max` |
+
+```js
+import { bessScenario } from './domain/bess.js';
+import { computeScenario } from './domain/model.js';
+computeScenario(bessScenario('min'));   // NPV 3,133,435.55 · IRR 21.01% (= Summary_min)
+computeScenario(bessScenario('max', { sizeKwh: 1000 }));  // ปรับสมมติฐานได้ทุกตัว
+```
+
+ข้อสังเกตจากไฟล์ Excel (เอนจินทำซ้ำค่าเดิมเป็นค่าตั้งต้น แต่ควรทบทวน):
+- `Summary_*!B9` (Payback) เป็นตัวเลขพิมพ์ลงไป ไม่ตรงกับคอลัมน์สะสมของไฟล์เอง: คำนวณจริงได้ 4.23 / 6.61 ปี (Excel แสดง 4.57 / 7.12)
+- `BESS!B16` ใช้ 500 kWh ตายตัวในค่าติดตั้ง: เอนจินคิดตามขนาดจริง
+- รายได้นับ peak shaving + tariff management ของพลังงาน 400 kWh ชุดเดียวกันทั้งคู่ และ demand charge 196.26 × 400 นับปีละครั้ง: ปรับได้ผ่าน `energyKwhPerDay`, `demandKw`, `demandMonthsPerYear`
+
 ## ฐานข้อมูล
 - `client_projects` (owner, id, product, name, scenario jsonb, position)
 - `workspace_settings` (owner, selected, active)
