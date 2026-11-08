@@ -465,3 +465,17 @@ body.welcoming{overflow:hidden}
 }
 @keyframes dash-in{from{transform:translateY(70px) scale(.97);opacity:.0}60%{opacity:1}to{transform:none;opacity:1}}
 @media(prefers-reduced-motion:reduce){.welcome.out{transform:none;opacity:0;transition:opacity .2s}}
+
+/* ===== V4.13 — "Login successful" status bar instead of a button ===== */
+.ws-status{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:18px;min-height:46px;width:100%;border-radius:14px;background:#ffffff10;border:1px solid #ffffff1a;color:#cfe3dc;font-size:14px;font-weight:600}
+.ws-status-fill{position:absolute;inset:0;width:calc(var(--p,0) * 100%);background:linear-gradient(135deg,#8ff0c4,#2fbf86);transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.ws-status-label,.ws-status-check{position:relative;z-index:1}
+.ws-status-check{width:18px;height:18px;fill:none;stroke:#0d2a20;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;display:none}
+.ws-status.ok{color:#0d2a20;border-color:transparent;box-shadow:0 12px 30px #2fbf8644}
+.ws-status.ok .ws-status-check{display:block}
+.welcome.leaving .ws-status{transform:scale(.97);transition:transform .26s}
+@media(prefers-reduced-motion:no-preference){
+  .ws-status{animation:card-in .6s cubic-bezier(.2,.8,.2,1) 1.3s both}
+  .ws-status.ok .ws-status-label{animation:pop-in .42s cubic-bezier(.2,.9,.3,1.4)}
+  .ws-status.ok .ws-status-check{stroke-dasharray:24;stroke-dashoffset:24;animation:ws-draw .4s .1s forwards}
+}

@@ -1,10 +1,10 @@
 // Success screen shown right after signing in (or choosing demo mode), before the workspace appears —
 // in the style of an investment app's "order succeeded" screen: a check that pops and draws, ripples
 // and sparkles, then a receipt card whose rows tick off as the real work finishes
-// (sign-in → client projects loaded → dashboard drawn). "เข้าสู่แดชบอร์ด" skips ahead.
+// (sign-in → client projects loaded → dashboard drawn); the bottom bar fills and turns into "Login successful".
 const reduce = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-const MIN_SHOW = 3800;   // ms, long enough to read the card even when loading is instant
+const MIN_SHOW = 3600;   // ms, long enough to read the card even when loading is instant
 const FIRST_TICK = 1300; // ms, after the card has slid in
 const STEP_GAP = 520;    // ms between ticks
 const PERSON = '<svg viewBox="0 0 24 24" class="avatar-icon"><circle cx="12" cy="8.5" r="4"/><path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4s6.3 1.8 7.5 5.4"/></svg>';
@@ -16,7 +16,7 @@ let el = null, startedAt = 0, done = 0, finishing = null, target = -1, timer = n
 function close(resolve) {
   const node = el; el = null; finishing = null; ready = false; skip = false;
   clearTimeout(timer); timer = null;
-  node.classList.add('leaving');                      // button press + card confirm pulse
+  node.classList.add('leaving');                      // status bar + card confirm pulse
   setTimeout(() => {
     node.classList.add('out');                        // sheet slides up and away
     document.body.classList.remove('welcoming');
@@ -49,18 +49,17 @@ export const welcome = {
         ${Array.from({ length: 10 }, (_, i) => `<span class="ws-spark" style="--a:${i * 36}deg;--d:${i % 2 ? 78 : 96}px;--s:${i % 3 ? 6 : 9}px"></span>`).join('')}
         <svg class="ws-check" viewBox="0 0 96 96"><defs><linearGradient id="ws-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8ff0c4"/><stop offset="1" stop-color="#2fbf86"/></linearGradient></defs><circle cx="48" cy="48" r="44" fill="url(#ws-g)"/><path d="M29 49.5 42 62 67 35"/></svg>
       </div>
-      <h2 class="ws-title">${demo ? 'Demo mode ready' : 'Login successful'}</h2>
-      <p class="ws-sub">${demo ? 'ยินดีต้อนรับ · ข้อมูลตัวอย่างเก็บในเบราว์เซอร์นี้' : 'ยินดีต้อนรับกลับ คุณ<b class="welcome-name">' + esc(name) + '</b>'}</p>
+      <h2 class="ws-title">${demo ? 'ยินดีต้อนรับสู่โหมดทดลอง' : 'ยินดีต้อนรับกลับ'}</h2>
+      <p class="ws-sub">${demo ? 'ข้อมูลตัวอย่างเก็บในเบราว์เซอร์นี้' : 'คุณ<b class="welcome-name">' + esc(name) + '</b>'}</p>
       <div class="ws-card">
         <div class="ws-account"><span class="welcome-avatar">${demo ? PERSON : esc(mark(name)) || PERSON}</span><div><b class="ws-account-name">${esc(name)}</b><small>${demo ? 'โหมดทดลอง' : esc(email)}</small></div><span class="ws-badge">${demo ? 'DEMO' : 'CLOUD'}</span></div>
         <ol class="welcome-steps">${steps.map((s, i) => `<li data-step="${i}"><span>${s}</span><i aria-hidden="true"></i></li>`).join('')}</ol>
         <div class="ws-foot"><span>EGAT Financial Feasibility</span><span>${esc(when)}</span></div>
       </div>
-      <button type="button" class="ws-enter" data-enter>เข้าสู่แดชบอร์ด →</button>
+      <div class="ws-status" data-done-label="${demo ? 'Demo mode ready' : 'Login successful'}"><span class="ws-status-fill" aria-hidden="true"></span><span class="ws-status-label">กำลังเตรียมแดชบอร์ด…</span><svg class="ws-status-check" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5 10 17l9-10"/></svg></div>
     </div>`;
     document.body.append(el);
     document.body.classList.add('welcoming');
-    el.querySelector('[data-enter]').onclick = () => { skip = true; if (ready) close(); };
     this.step(0);
   },
 
@@ -86,6 +85,9 @@ export const welcome = {
         if (!el) return;
         el.querySelector(`[data-step="${done}"]`)?.classList.add('done');
         done += 1; lastTick = performance.now();
+        const bar = el.querySelector('.ws-status');
+        bar.style.setProperty('--p', String(done / 3));
+        if (done === 3) { bar.classList.add('ok'); bar.querySelector('.ws-status-label').textContent = bar.dataset.doneLabel; }
         pump();
       }, wait);
     };
@@ -100,7 +102,7 @@ export const welcome = {
     if (skip) { finishing = new Promise(close); return finishing; }
     const since = performance.now() - startedAt;
     const remainingTicks = done === 0 ? Math.max(0, FIRST_TICK - since) + 2 * STEP_GAP : (3 - done) * STEP_GAP;
-    const wait = reduce() ? 600 : Math.max(MIN_SHOW - since, remainingTicks + 700);
+    const wait = reduce() ? 600 : Math.max(MIN_SHOW - since, remainingTicks + 1000);
     finishing = new Promise(resolve => setTimeout(() => (el ? close(resolve) : resolve()), wait));
     return finishing;
   },
