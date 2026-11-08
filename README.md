@@ -62,7 +62,7 @@ npm install
 #   VITE_SUPABASE_URL=https://hdreqbadncphcxlyxfrh.supabase.co
 #   VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 npm run dev      # http://localhost:5193
-npm test         # 20 tests
+npm test         # 22 tests
 npm run build
 ```
 ใช้เฉพาะ publishable key ฝั่งหน้าเว็บ ห้ามใส่ service_role / secret key

@@ -309,3 +309,14 @@ body:not([data-view=overview]) .body-grid{grid-template-columns:minmax(0,1fr)}
 .product-choice .product-model canvas{display:block;width:100%!important;height:100%!important}
 .product-choice:hover .product-model{filter:brightness(1.06)}
 @media(max-width:620px){.product-choice .product-model{height:130px}}
+
+/* ===== V4.7 — sidebar "+" stays inside the open sidebar ===== */
+@media(min-width:901px){
+  body.rail-open .rail>*{min-width:222px;max-width:222px}
+  .rail .project-section-heading{margin-left:4px;margin-right:4px}
+}
+.project-section-heading button{flex-shrink:0;display:grid;place-items:center;line-height:1}
+@media(min-width:901px){
+  .rail .side-brand,.rail .project-section-heading{box-sizing:border-box;margin-left:0;margin-right:0;padding-left:6px;padding-right:6px}
+  body.rail-open .rail{overflow-x:hidden}
+}
