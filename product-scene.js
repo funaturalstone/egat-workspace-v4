@@ -10,6 +10,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
  * Each instance owns its geometry, renderer and event listeners.
  */
 export function mountProductScene(container, product = 'solar', options = {}) {
+  options = { ...options, swayInitial: options.sway };
   if (!['solar', 'hybrid', 'battery'].includes(product)) throw new Error('Unknown product');
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -184,7 +185,7 @@ export function mountProductScene(container, product = 'solar', options = {}) {
   function listen(target,event,handler) { target.addEventListener(event,handler); events.push(() => target.removeEventListener(event,handler)); }
   function fit(width,height) {
     const viewHeight = Math.max(options.zoomHeight ?? 6.6,9.4*height/width);
-    camera.left=-viewHeight*width/height/2; camera.right=-camera.left;
+    const halfW=viewHeight*width/height/2,shift=(options.shiftX??0)*halfW; camera.left=-halfW-shift; camera.right=halfW-shift;
     camera.top=viewHeight/2; camera.bottom=-camera.top; camera.updateProjectionMatrix();
   }
   function resize() {
@@ -194,23 +195,23 @@ export function mountProductScene(container, product = 'solar', options = {}) {
   }
   const observer = new ResizeObserver(resize); observer.observe(container); resize();
   const visibility = new IntersectionObserver(([entry]) => {visible=entry.isIntersecting;}); visibility.observe(container);
-  listen(container,'pointerdown',e=>{if(e.button!==0)return;dragging=true;startX=e.clientX;startRotation=targetRotation;container.setPointerCapture(e.pointerId);});
+  listen(container,'pointerdown',e=>{if(e.button!==0)return;dragging=true;options.sway=false;startX=e.clientX;startRotation=targetRotation;container.setPointerCapture(e.pointerId);});
   listen(container,'pointermove',e=>{if(dragging)targetRotation=startRotation+(e.clientX-startX)*.006;});
   for (const event of ['pointerup','pointercancel','lostpointercapture']) listen(container,event,()=>{dragging=false;});
   // Keyboard access is exposed on the viewport, independently of selection.
-  listen(container,'keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();targetRotation+=(e.key==='ArrowLeft'?-.15:.15);}if(e.key==='Home')targetRotation=-.10;});
+  listen(container,'keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();options.sway=false;targetRotation+=(e.key==='ArrowLeft'?-.15:.15);}if(e.key==='Home')targetRotation=-.10;});
   function frame(now) {
     if(disposed)return;
     const dt=Math.max(0,Math.min((now-last)/1000,.05)); last=now;
     if(visible&&!document.hidden) {
       if(motion&&!media.matches&&!dragging)time+=dt;
       // Idle sway shows the model is real 3D; dragging or the keyboard still take over.
-      if(options.sway&&motion&&!media.matches&&!dragging)targetRotation=-.10+Math.sin(time*.45+(options.phase??0))*.32;
+      if(options.sway&&motion&&!media.matches&&!dragging)targetRotation=-.10+Math.sin(time*.375+(options.phase??0))*.32;
       rotation+=(targetRotation-rotation)*(media.matches?1:1-Math.exp(-10*dt));
       model.rotation.y=rotation;
-      cloud.position.y=3.48+(motion&&!media.matches?Math.sin(time*.7)*.035:0);
-      sun.position.y=3.15+(motion&&!media.matches?Math.sin(time*.8)*.025:0);
-      particles.forEach((p,i)=>p.position.copy(routes[i].getPoint((time*.12+.3)%1)).add(new THREE.Vector3(0,.04,0)));
+      cloud.position.y=3.48+(motion&&!media.matches?Math.sin(time*.58)*.035:0);
+      sun.position.y=3.15+(motion&&!media.matches?Math.sin(time*.67)*.025:0);
+      particles.forEach((p,i)=>p.position.copy(routes[i].getPoint((time*.1+.3)%1)).add(new THREE.Vector3(0,.04,0)));
       renderer.render(scene,camera);
     }
     raf=requestAnimationFrame(frame);
@@ -218,7 +219,7 @@ export function mountProductScene(container, product = 'solar', options = {}) {
   raf=requestAnimationFrame(frame);
   return {
     setMotion(on){motion=Boolean(on);},
-    reset(){targetRotation=-.10;},
+    reset(){targetRotation=-.10;options.sway=Boolean(options.swayInitial??options.sway);},
     exportCanvas(width=1600,height=1200) {
       // Render and copy synchronously; no preserveDrawingBuffer needed.
       const oldSize=renderer.getSize(new THREE.Vector2()), ratio=renderer.getPixelRatio();

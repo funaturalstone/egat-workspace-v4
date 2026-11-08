@@ -27,7 +27,31 @@
       <div class="hero-actions"><a href="/app?demo" class="lbtn solid lg">ทดลองโครงการตัวอย่าง →</a><a href="#platform" class="lbtn ghost lg">ดูผลวิเคราะห์</a></div>
       <p class="hero-helper">ไม่ต้องสมัคร · ข้อมูลตัวอย่างแยกจากโครงการจริง</p>
     </div>
-    <div class="hero-3d" id="hero-3d" data-compact="false"><span id="canvas-wrap" role="img" aria-label="โมเดล 3 มิติ ระบบ Solar + Battery"></span></div>
+    <div class="hero-stage" id="hero-stage" aria-label="โมเดล 3 มิติ ผลิตภัณฑ์พลังงาน">
+      <div class="stage-top">
+        <span class="stage-eyebrow"><i></i> SMALL SYSTEM. BRIGHTER TOMORROW.</span>
+        <button class="stage-round" id="stage-motion" type="button" aria-label="หยุดภาพเคลื่อนไหว" aria-pressed="false">Ⅱ</button>
+      </div>
+      <div class="stage-view" id="stage-view" tabindex="0" role="img" aria-label="ลากหรือกดลูกศรซ้าย/ขวาเพื่อหมุนโมเดล"></div>
+      <article class="stage-info" aria-live="polite">
+        <div class="stage-category"><span class="stage-icon" id="stage-icon">ϟ</span><span id="stage-category">BATTERY ENERGY STORAGE</span></div>
+        <h2 class="stage-title" id="stage-title">BESS<span>-500</span><b>.</b></h2>
+        <p class="stage-desc" id="stage-desc"></p>
+        <div class="stage-detail"><span class="stage-dot"></span><span id="stage-detail"></span></div>
+        <dl class="stage-stats" id="stage-stats"></dl>
+      </article>
+      <div class="stage-note" aria-hidden="true"><span class="stage-note-icon" id="stage-note-icon">ϟ</span><span id="stage-note"></span><span class="stage-spark">✦</span></div>
+      <div class="stage-caption"><span></span> พลังงานสะอาด เชื่อมถึงกัน</div>
+      <div class="stage-bar">
+        <div class="stage-tabs" role="group" aria-label="เลือกผลิตภัณฑ์">
+          <button class="stage-tab" type="button" data-stage="solar" aria-pressed="false"><span>☀</span> Solar PPA <i></i></button>
+          <button class="stage-tab" type="button" data-stage="hybrid" aria-pressed="false"><span>◈</span> Solar + Battery <i></i></button>
+          <button class="stage-tab" type="button" data-stage="battery" aria-pressed="true"><span>ϟ</span> Battery <i></i></button>
+        </div>
+        <span class="stage-hint">ลากเพื่อหมุนดูโมเดล <span>↔</span></span>
+        <button class="stage-reset" id="stage-reset" type="button">↺ <span>มุมมองเริ่มต้น</span></button>
+      </div>
+    </div>
   </section>
 
   <section class="landing-section" id="solutions">
