@@ -538,3 +538,8 @@ body[data-view=overview] #rail-menu{margin-bottom:10px}
   body[data-view=overview] #content .metric-grid .metric-value{font-size:calc(26px + var(--kpi-grow,0px))}
   body[data-view=overview] .scenario-hero{padding-top:calc(12px + var(--hero-extra,0px) / 2);padding-bottom:calc(12px + var(--hero-extra,0px) / 2)}
 }
+
+/* ===== centred + icons in the sidebar ===== */
+#sidebar-add,.nav-ini-add{display:grid;place-items:center;padding:0;line-height:0}
+.plus-icon{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round}
+.nav-ini-add .plus-icon{width:15px;height:15px}
