@@ -3,7 +3,7 @@ const DEMO_KEY = 'egat-v4-mode';
 const $ = s => document.querySelector(s);
 
 export async function chooseMode(supabase) {
-  // "ทดลองใช้งาน" on the landing page opens app.html?demo
+  // "ทดลองใช้งาน" on the landing page opens /app?demo
   const url = new URL(location.href);
   if (url.searchParams.has('demo')) {
     try { sessionStorage.setItem(DEMO_KEY, 'demo'); } catch { /* storage blocked */ }
@@ -45,7 +45,7 @@ function openGate(supabase, resolve) {
     submit.disabled = true; say(signup ? 'กำลังสมัคร…' : 'กำลังเข้าสู่ระบบ…', 'info');
     try {
       if (signup) {
-        const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + '/app.html' } });
+        const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + '/app' } });
         if (error) throw error;
         if (data.session) return done({ mode: 'cloud', user: data.session.user });
         setMode(false); say('ส่งอีเมลยืนยันแล้ว · กดลิงก์ในอีเมล แล้วกลับมาเข้าสู่ระบบ', 'info');

@@ -19,8 +19,8 @@
 - **เข้าสู่ระบบ** แล้วโครงการบันทึกบนคลาวด์อัตโนมัติ เห็นได้เฉพาะบัญชีตัวเอง หรือใช้ **โหมดทดลอง** (เก็บในเบราว์เซอร์)
 
 ## โครงสร้าง
-- `index.html` `landing.js` `landing.css` — หน้าแรก (landing) · ปุ่มทดลองใช้งานเปิด `/app.html?demo`
-- `app.html` `app.js` `style.css` — พื้นที่ทำงาน (`/app.html`)
+- `index.html` `landing.js` `landing.css` — หน้าแรก (landing) · ปุ่มทดลองใช้งานเปิด `/app?demo`
+- `app.html` `app.js` `style.css` — พื้นที่ทำงาน (`/app` · Vercel cleanUrls ตัด .html)
 - `auth.js` — หน้าเข้าสู่ระบบ / สมัคร / โหมดทดลอง
 - `store.js` — เลือกที่เก็บข้อมูล: Supabase (เข้าสู่ระบบ) หรือ localStorage (ทดลอง) · บันทึกแบบหน่วง 0.6 วินาที
 - `workspace-sync.js` — แปลงข้อมูลแอป ↔ แถวในฐานข้อมูล (มีเทสต์)
