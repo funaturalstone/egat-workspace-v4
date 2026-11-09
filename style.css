@@ -609,3 +609,10 @@ body.gated .app-shell{visibility:hidden}
 /* build the page's GPU layer while it's still hidden behind the welcome sheet, not at the start of the slide */
 body.welcoming .app-shell,body.dashboard-in .app-shell{will-change:transform,opacity}
 .metric-card,.scenario-hero{contain:content}
+
+/* ===== sidebar selection in the sunset theme (was mint) ===== */
+.project-group.active>summary{box-shadow:inset 3px 0 #ffb28b;background:#ffb28b14}
+.project-group.active>summary>span{color:#ffc39a}
+.project-row.selected{box-shadow:inset 3px 0 #ffb28b;background:#ffb28b14}
+.project-row.selected .project-dot{background:#ffb28b}
+.nav-ini.active{background:linear-gradient(135deg,#ffd2a733,#f3a38726);color:#ffc39a;box-shadow:inset 3px 0 #ffb28b}
