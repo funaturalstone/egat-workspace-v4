@@ -263,9 +263,11 @@ export function mountProductScene(container, product = 'solar', options = {}) {
     // refEl: the canvas covers the whole card, but the model keeps the size and position it had in the
     // card's 3D area (refEl), so anything that used to be clipped now spills into the card instead.
     const ref = options.refEl?.getBoundingClientRect?.(), cont = container.getBoundingClientRect();
-    if (ref && ref.height > 0 && ref.width > 0 && cont.height > 0) {
-      const base = Math.max(viewNow.zoom, 9.4 * ref.height / ref.width), perPx = base / ref.height;
-      const cy = ref.top + ref.height / 2 - cont.top, cx = ref.left + ref.width / 2 - cont.left;
+    if (ref && ref.height > 0 && ref.width > 0 && cont.height > 0 && container.clientWidth > 0) {
+      const k = cont.width / container.clientWidth;   // undo any CSS transform scale on the frame
+      const rw = ref.width / k, rh = ref.height / k;
+      const base = Math.max(viewNow.zoom, 9.4 * rh / rw), perPx = base / rh;
+      const cy = (ref.top - cont.top) / k + rh / 2, cx = (ref.left - cont.left) / k + rw / 2 + (options.shiftX ?? 0) * rw / 2;
       camera.top = perPx * cy; camera.bottom = camera.top - perPx * height;
       camera.left = -perPx * cx; camera.right = camera.left + perPx * width;
       camera.updateProjectionMatrix(); return;
@@ -290,7 +292,8 @@ export function mountProductScene(container, product = 'solar', options = {}) {
     camera.top=viewHeight/2; camera.bottom=-camera.top; camera.updateProjectionMatrix();
   }
   function resize() {
-    const {width,height}=container.getBoundingClientRect();
+    // layout size, not getBoundingClientRect: an entrance animation that scales the frame must not freeze the canvas smaller
+    const width=container.clientWidth, height=container.clientHeight;
     if (width<=0 || height<=0) return;
     renderer.setSize(width,height); fit(width,height);
   }

@@ -231,3 +231,8 @@ a:focus-visible,summary:focus-visible{outline:3px solid var(--orange);outline-of
   .stage-info{top:clamp(50px,7vh,70px)}
   .stage-note{top:clamp(80px,13vh,150px)}
 }
+
+/* ===== 3D fills the whole frame (no clipped model); hero background box removed ===== */
+.stage-frame{position:absolute;inset:40px 0 70px;pointer-events:none;visibility:hidden}
+@media(min-width:901px){.stage-view{inset:0}}
+.hero-bg{display:none}

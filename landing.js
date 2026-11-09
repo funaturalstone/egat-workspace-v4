@@ -57,7 +57,8 @@ function showProduct(next) {
 const FOCUS = { solar: ['solar'], hybrid: ['solar', 'battery'], battery: ['battery'] };
 try {
   const wide = matchMedia('(min-width: 901px)').matches;
-  current = mountProductScene(view, 'all', { sway: true, lookY: wide ? 1.45 : 1.1, zoomHeight: wide ? 6.2 : 6.4, shiftX: wide ? .27 : 0 });
+  // the canvas fills the whole frame (nothing is clipped); the model keeps its framing against #stage-frame
+  current = mountProductScene(view, 'all', { sway: true, lookY: wide ? 1.4 : 1.1, zoomHeight: wide ? 6.9 : 6.4, shiftX: wide ? .27 : 0, refEl: wide ? document.getElementById('stage-frame') : null });
   current.setMotion(moving);
 } catch { stage.classList.add('no-webgl'); }
 stage.querySelectorAll('[data-stage]').forEach(b => b.addEventListener('click', () => { if (b.dataset.stage !== product) showProduct(b.dataset.stage); }));
