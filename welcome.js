@@ -12,16 +12,20 @@ const PERSON = '<svg viewBox="0 0 24 24" class="avatar-icon"><circle cx="12" cy=
 const mark = name => (/^[A-Za-z0-9]/.test(name || '') ? name.trim().split(/[\s._-]+/).filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase() : '');
 
 let el = null, startedAt = 0, done = 0, finishing = null, target = -1, timer = null, lastTick = 0, ready = false, skip = false;
+// "quiet": all three rows ticked and the status bar has settled — the moment to do heavy work unseen.
+let quietResolve = null, quiet = Promise.resolve(), holds = [];
 
 function close(resolve) {
   const node = el; el = null; finishing = null; ready = false; skip = false;
   clearTimeout(timer); timer = null;
   node.classList.add('leaving');                      // status bar + card confirm pulse
+  // Release the page while the sheet still covers it: this whole-page restyle costs one long frame,
+  // so it happens during the press pulse (GPU-run) instead of at the start of the slide.
+  document.body.classList.remove('welcoming');
+  document.body.classList.add('dashboard-in');        // workspace starts rising underneath (delayed to match the slide)
+  dispatchEvent(new CustomEvent('welcome:closed'));   // app releases the held card entry and schedules the count-up
   setTimeout(() => {
     node.classList.add('out');                        // sheet slides up and away
-    document.body.classList.remove('welcoming');
-    document.body.classList.add('dashboard-in');      // workspace rises in underneath
-    dispatchEvent(new CustomEvent('welcome:closed')); // app replays cards, count-up and charts
     setTimeout(() => { node.remove(); resolve?.(); }, reduce() ? 0 : 900);
     setTimeout(() => document.body.classList.remove('dashboard-in'), 1400);
   }, reduce() ? 0 : 260);
@@ -29,10 +33,17 @@ function close(resolve) {
 
 export const welcome = {
   get active() { return Boolean(el); },
+  // resolves after two painted frames, so the welcome animations are running on the compositor before heavy work
+  painted() { return new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))); },
+  // resolves when the welcome screen is idle (or right away if it isn't showing)
+  whenQuiet() { return el ? quiet : Promise.resolve(); },
+  // keep the welcome screen up until this work is done (capped), so the slide never competes with it
+  hold(promise) { if (el) holds.push(Promise.race([promise, new Promise(r => setTimeout(r, 2500))])); },
 
   start({ mode = 'cloud', email = '' } = {}) {
     if (el) return;
     startedAt = performance.now(); done = 0; target = -1; clearTimeout(timer); timer = null; lastTick = 0; ready = false; skip = false;
+    quiet = new Promise(r => (quietResolve = r)); holds = [];
     const demo = mode === 'demo';
     const steps = demo
       ? ['เปิดโหมดทดลอง', 'เตรียมโครงการตัวอย่าง', 'จัดแดชบอร์ดและกราฟ']
@@ -87,7 +98,7 @@ export const welcome = {
         done += 1; lastTick = performance.now();
         const bar = el.querySelector('.ws-status');
         bar.style.setProperty('--p', String(done / 3));
-        if (done === 3) { bar.classList.add('ok'); bar.querySelector('.ws-status-label').textContent = bar.dataset.doneLabel; }
+        if (done === 3) { bar.classList.add('ok'); bar.querySelector('.ws-status-label').textContent = bar.dataset.doneLabel; setTimeout(() => quietResolve?.(), reduce() ? 0 : 520); }
         pump();
       }, wait);
     };
@@ -103,7 +114,7 @@ export const welcome = {
     const since = performance.now() - startedAt;
     const remainingTicks = done === 0 ? Math.max(0, FIRST_TICK - since) + 2 * STEP_GAP : (3 - done) * STEP_GAP;
     const wait = reduce() ? 600 : Math.max(MIN_SHOW - since, remainingTicks + 1000);
-    finishing = new Promise(resolve => setTimeout(() => (el ? close(resolve) : resolve()), wait));
+    finishing = new Promise(resolve => Promise.all([new Promise(r => setTimeout(r, wait)), quiet, ...holds]).then(() => requestAnimationFrame(() => (el ? close(resolve) : resolve()))));
     return finishing;
   },
 };

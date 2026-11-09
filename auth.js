@@ -37,6 +37,7 @@ function openGate(supabase, resolve) {
   const done = value => { welcome.start({ mode: value.mode, email: value.user?.email || '' }); gate.hidden = true; document.body.classList.remove('gated'); resolve(value); };
 
   gate.hidden = false; document.body.classList.add('gated');
+  document.body.classList.remove('booting');
   $('#auth-switch').onclick = () => setMode(!signup);
   $('#auth-demo').onclick = () => { try { sessionStorage.setItem(DEMO_KEY, 'demo'); } catch { /* storage blocked */ } done({ mode: 'demo' }); };
   form.onsubmit = async e => {

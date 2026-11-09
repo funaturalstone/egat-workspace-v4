@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 /** EGAT Product Studio V5 models (Solar PPA / Solar + Battery / Battery), from EGAT-Product-Studio-V5.zip.
  * Changes for the workspace: npm Three.js import, optional gentle sway (options.sway) and a smaller shadow map
@@ -15,7 +16,7 @@ export function mountProductScene(container, product = 'solar', options = {}) {
   options = { ...options, swayInitial: options.sway };
   if (!['solar', 'hybrid', 'battery', 'all'].includes(product)) throw new Error('Unknown product');
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, options.maxPixelRatio ?? 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
@@ -60,7 +61,8 @@ export function mountProductScene(container, product = 'solar', options = {}) {
   }
   function box(parent, size, pos, mat, radius = .06) {
     const r = Math.min(radius, ...size.map(n => n / 2));
-    return mesh(parent, new RoundedBoxGeometry(...size, 3, r), mat, pos);
+    // rounding below ~0.012 units is invisible at this scale: plain boxes build and render much faster
+    return mesh(parent, r < .012 ? new THREE.BoxGeometry(...size) : new RoundedBoxGeometry(...size, 3, r), mat, pos);
   }
   function ball(parent, radius, pos, mat, scale = [1,1,1]) {
     const obj = mesh(parent, new THREE.SphereGeometry(radius, 24, 16), mat, pos);
@@ -184,6 +186,37 @@ export function mountProductScene(container, product = 'solar', options = {}) {
     tree(-2.65,-1.6,.72); tree(-2.6,1.3,.52);
   }
 
+  // Performance: the models are built from hundreds of small meshes (every solar cell is one). Merge every
+  // static mesh that shares a material into one mesh per part, so a frame needs ~a dozen draw calls instead of
+  // hundreds. Parts stay separate groups (the landing page lifts and dims them); sun, cloud and energy dots are
+  // created after this and keep animating on their own.
+  function mergeStatic(container) {
+    container.updateMatrixWorld(true);
+    const inv = container.matrixWorld.clone().invert(), byMat = new Map(), meshes = [];
+    container.traverse(obj => {
+      if (!obj.isMesh || obj === container) return;
+      if (container === model) { let p = obj.parent; while (p && p !== model) { if (p.isGroup && p.parent === model) return; p = p.parent; } }
+      meshes.push(obj);
+      const g = obj.geometry.index ? obj.geometry.toNonIndexed() : obj.geometry.clone();
+      g.applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv, obj.matrixWorld));
+      for (const name of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(name)) g.deleteAttribute(name);
+      g.morphAttributes = {}; g.clearGroups();
+      if (!byMat.has(obj.material)) byMat.set(obj.material, []);
+      byMat.get(obj.material).push(g);
+    });
+    if (meshes.length < 2) return;
+    meshes.forEach(m => { m.parent.remove(m); m.geometry.dispose(); geometries.delete(m.geometry); });
+    container.traverse(obj => { if (obj.isGroup && obj !== container && obj.children.length === 0) obj.parent?.remove(obj); });
+    for (const [mat, list] of byMat) {
+      const merged = mergeGeometries(list, false); list.forEach(g => g.dispose());
+      if (!merged) continue;
+      geometries.add(merged);
+      const mesh = new THREE.Mesh(merged, mat); mesh.castShadow = true; mesh.receiveShadow = true; container.add(mesh);
+    }
+  }
+  model.children.filter(c => c.isGroup).forEach(mergeStatic);
+  mergeStatic(model);
+
   const focus = Object.entries(parts).map(([key,group]) => {
     const bounds = new THREE.Box3().setFromObject(group), size = bounds.getSize(new THREE.Vector3()), center = bounds.getCenter(new THREE.Vector3());
     const mat = new THREE.MeshStandardMaterial({ color:'#ffb48d', emissive:'#ff9a66', emissiveIntensity:.7, transparent:true, opacity:0, roughness:.4 }); materials.add(mat);
@@ -193,6 +226,8 @@ export function mountProductScene(container, product = 'solar', options = {}) {
     return { key, group, ring, mats: [...own.values()], baseY: group.position.y, lift: 0, glow: 0, dim: 0 };
   });
   let focusKeys = [];
+  const viewTarget = { zoom: options.zoomHeight ?? 6.6, lookY: options.lookY ?? 1.05, scale: options.scale ?? 1 };
+  const viewNow = { ...viewTarget };
   const DIM = new THREE.Color('#020409');
   const sun = ball(model,.23,[-2.35,3.15,-.65],m.orange);
   const cloud = new THREE.Group(); cloud.position.set(.30,3.48,-1.4); model.add(cloud);
@@ -201,10 +236,55 @@ export function mountProductScene(container, product = 'solar', options = {}) {
 
   const media = matchMedia('(prefers-reduced-motion: reduce)');
   let motion = false, dragging = false, rotation = -.10, targetRotation = -.10;
-  let startX = 0, startRotation = 0, visible = true, disposed = false, time = 0, raf = 0, last = performance.now();
+  let rendered = false, compiled = false, startX = 0, startRotation = 0, visible = true, disposed = false, time = 0, raf = 0, last = performance.now();
   const events = [];
   function listen(target,event,handler) { target.addEventListener(event,handler); events.push(() => target.removeEventListener(event,handler)); }
+  // autoFrame: measure the scene's real outline in camera space (across the idle-sway rotations)
+  // so the camera can frame it with margins at any card size and never cut anything off.
+  const outline = options.autoFrame ? (() => {
+    camera.updateMatrixWorld(); const inv = camera.matrixWorldInverse, box = new THREE.Box3(), v = new THREE.Vector3();
+    const out = { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity }, saved = model.rotation.y;
+    for (const ry of [-0.5, -0.3, -0.1, 0.1, 0.25]) {
+      model.rotation.y = ry; model.updateMatrixWorld(true);
+      // each part's own box: a single box around everything would add empty corners and shrink the view
+      model.traverse(mesh => {
+        if (!mesh.isMesh) return;
+        box.setFromObject(mesh);
+        for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) {
+          v.set(x, y, z).applyMatrix4(inv);
+          out.minX = Math.min(out.minX, v.x); out.maxX = Math.max(out.maxX, v.x); out.minY = Math.min(out.minY, v.y); out.maxY = Math.max(out.maxY, v.y);
+        }
+      });
+    }
+    model.rotation.y = saved; model.updateMatrixWorld(true);
+    return out;
+  })() : null;
   function fit(width,height) {
+    // refEl: the canvas covers the whole card, but the model keeps the size and position it had in the
+    // card's 3D area (refEl), so anything that used to be clipped now spills into the card instead.
+    const ref = options.refEl?.getBoundingClientRect?.(), cont = container.getBoundingClientRect();
+    if (ref && ref.height > 0 && ref.width > 0 && cont.height > 0) {
+      const base = Math.max(viewNow.zoom, 9.4 * ref.height / ref.width), perPx = base / ref.height;
+      const cy = ref.top + ref.height / 2 - cont.top, cx = ref.left + ref.width / 2 - cont.left;
+      camera.top = perPx * cy; camera.bottom = camera.top - perPx * height;
+      camera.left = -perPx * cx; camera.right = camera.left + perPx * width;
+      camera.updateProjectionMatrix(); return;
+    }
+    if (outline) {
+      const m = options.autoFrame, s = viewNow.scale;
+      let l = outline.minX, r = outline.maxX, t = outline.maxY, b = outline.minY;
+      const w0 = r - l, h0 = t - b;
+      l -= w0 * (m.side ?? .04); r += w0 * (m.side ?? .04); t += h0 * (m.top ?? .1); b -= h0 * (m.bottom ?? .05);
+      // keep pixel bands clear at the top and bottom (the card's label and name sit over the canvas)
+      const padTop = m.padTop ?? 0, padBottom = m.padBottom ?? 0, usable = Math.max(40, height - padTop - padBottom), aspect = width / usable;
+      if ((r - l) / (t - b) < aspect) { const add = ((t - b) * aspect - (r - l)) / 2; l -= add; r += add; }
+      else { const add = ((r - l) / aspect - (t - b)) / 2; t += add; b -= add; }
+      const cx = (l + r) / 2, cy = (t + b) / 2; // scale 1 = fills the free area exactly; below 1 = more room around it
+      l = cx + (l - cx) / s; r = cx + (r - cx) / s; t = cy + (t - cy) / s; b = cy + (b - cy) / s;
+      const perPx = (t - b) / usable;
+      camera.left = l; camera.right = r; camera.top = t + padTop * perPx; camera.bottom = b - padBottom * perPx;
+      camera.updateProjectionMatrix(); return;
+    }
     const viewHeight = Math.max(options.zoomHeight ?? 6.6,9.4*height/width);
     const halfW=viewHeight*width/height/2,shift=(options.shiftX??0)*halfW; camera.left=-halfW-shift; camera.right=halfW-shift;
     camera.top=viewHeight/2; camera.bottom=-camera.top; camera.updateProjectionMatrix();
@@ -233,16 +313,24 @@ export function mountProductScene(container, product = 'solar', options = {}) {
       cloud.position.y=3.48+(motion&&!media.matches?Math.sin(time*.58)*.035:0);
       sun.position.y=3.15+(motion&&!media.matches?Math.sin(time*.67)*.025:0);
       const ease=media.matches?1:1-Math.exp(-7*dt);
+      if(Math.abs(viewNow.scale-viewTarget.scale)>1e-3){const k=media.matches?1:1-Math.exp(-6*dt);viewNow.scale+=(viewTarget.scale-viewNow.scale)*k;resize();}
+      if(!outline&&(Math.abs(viewNow.zoom-viewTarget.zoom)>1e-3||Math.abs(viewNow.lookY-viewTarget.lookY)>1e-3)){const k=media.matches?1:1-Math.exp(-6*dt);viewNow.zoom+=(viewTarget.zoom-viewNow.zoom)*k;viewNow.lookY+=(viewTarget.lookY-viewNow.lookY)*k;options.zoomHeight=viewNow.zoom;camera.lookAt(0,viewNow.lookY,0);resize();}
       focus.forEach(f=>{const on=focusKeys.includes(f.key),off=focusKeys.length>0&&!on;f.lift+=((on?.24:0)-f.lift)*ease;f.glow+=((on?.6:0)-f.glow)*ease;const lastDim=f.dim;f.dim+=((off?1:0)-f.dim)*ease;f.group.position.y=f.baseY+f.lift;f.ring.material.opacity=f.glow;if(Math.abs(f.dim-lastDim)>1e-4||f.dim===0&&lastDim!==0)f.mats.forEach(c=>{c.color.copy(c.userData.base).lerp(DIM,f.dim*.96);c.emissiveIntensity=c.userData.baseEmissive*(1-f.dim);});});
       particles.forEach((p,i)=>p.position.copy(routes[i].getPoint((time*.1+.3)%1)).add(new THREE.Vector3(0,.04,0)));
-      renderer.render(scene,camera);
+      // behind the login welcome screen and during its slide: show the first rendered frame, start moving afterwards
+      if(compiled&&!(rendered&&(document.body.classList.contains('welcoming')||document.body.classList.contains('dashboard-in')))){renderer.render(scene,camera);rendered=true;}
     }
     raf=requestAnimationFrame(frame);
   }
+  // compile shaders in the background (KHR_parallel_shader_compile) so the first frame never blocks the page
+  const ready = (renderer.compileAsync ? renderer.compileAsync(scene, camera) : Promise.resolve()).catch(() => {}).then(() => { compiled = true; });
   raf=requestAnimationFrame(frame);
   return {
+    ready,
     setMotion(on){motion=Boolean(on);},
     setFocus(keys=[]){focusKeys=[...keys];},
+    // Glide the camera to a new zoom (smaller = closer) and look-at height.
+    setView({zoom,lookY,scale}={}){if(zoom!=null)viewTarget.zoom=zoom;if(lookY!=null)viewTarget.lookY=lookY;if(scale!=null)viewTarget.scale=scale;},
     reset(){targetRotation=-.10;options.sway=Boolean(options.swayInitial??options.sway);},
     exportCanvas(width=1600,height=1200) {
       // Render and copy synchronously; no preserveDrawingBuffer needed.

@@ -554,3 +554,58 @@ body[data-view=overview] #rail-menu{margin-bottom:10px}
 .why code{display:block;font-family:inherit;font-size:10.5px;color:#a8bdd2;background:#0b1424;border-radius:7px;padding:6px 8px;overflow-wrap:anywhere}
 .why small{display:block;margin-top:4px;font-size:9px;color:#7f95ae}
 .table-badge.replace-badge{display:inline-flex;margin-left:8px;padding:3px 8px;border-radius:999px;font-size:9.5px;font-weight:700;background:#ff5a6e22;color:#ff8a98;border:1px solid #ff5a6e55;white-space:nowrap;cursor:help}
+
+/* ===== V4.20 — selected product: equal widths; lift, glow, spotlight, zoom and a sliding indicator (others stay fully lit) ===== */
+@media(min-width:621px){
+  .product-tabs{position:relative;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .product-choice{transition:transform .5s cubic-bezier(.2,.8,.2,1),box-shadow .5s,border-color .4s}
+  .product-choice.selected{transform:translateY(-6px);border-color:#ffc39acc;box-shadow:0 0 0 1px #ffb28b66,0 22px 44px -18px #000a,0 0 46px -6px #f3a38740}
+  .product-choice.selected:before{inset:4% 6% 18%;background:radial-gradient(ellipse at 50% 55%,#ffd2a72e,#f3a38712 45%,transparent 72%)}
+  .product-choice:not(.selected):hover{transform:translateY(-3px)}
+  .product-indicator{position:absolute;bottom:-9px;height:3px;border-radius:3px;background:linear-gradient(90deg,#ffd2a7,#f3a387);box-shadow:0 0 12px #f3a38799;transition:left .55s cubic-bezier(.2,.8,.2,1),width .55s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+}
+@media(max-width:620px){.product-indicator{display:none}}
+@media(prefers-reduced-motion:reduce){.product-choice,.product-indicator{transition:none}}
+
+/* ===== V4.21 — 3D canvas fills the whole product card (no inner edge); spotlight fades out fully ===== */
+@media(min-width:621px){
+  .product-choice{position:relative;overflow:hidden;isolation:isolate}
+  .product-choice .product-model{position:static;pointer-events:none}
+  .product-choice .product-model #canvas-wrap{position:absolute;inset:0;z-index:0}
+  .product-choice>.product-choice-copy{position:relative;z-index:2}
+  .product-choice>.model-index,.product-choice>.product-check{z-index:2}
+  .product-choice:before{inset:0;z-index:0;background:radial-gradient(closest-side at 50% 46%,#7a99bc1c,transparent)}
+  .product-choice.selected:before{inset:0;background:radial-gradient(closest-side at 50% 46%,#ffd2a72b,#f3a38710 55%,transparent)}
+}
+
+/* ===== hover must never shrink the 3D canvas: no filter/transform on the area that holds it ===== */
+.product-choice .product-model,.product-choice:hover .product-model,.product-choice.selected .product-model{filter:none!important;transform:none!important;contain:none!important;will-change:auto!important}
+.product-choice #canvas-wrap canvas{transition:filter .3s}
+.product-choice:hover #canvas-wrap canvas{filter:brightness(1.06)}
+
+/* ===== V4.22 — smooth login: GPU-only animations, entry held behind the welcome sheet ===== */
+/* transform + opacity only (no blur): these run on the compositor even while the page is busy */
+@keyframes card-in{from{opacity:0;transform:translateY(16px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes skeleton{0%,70%{opacity:1}100%{opacity:0}}
+#content.entering .card::after{background:linear-gradient(100deg,#1b2b43 30%,#22364d 50%,#1b2b43 70%),#1b2b43;background-size:100% 100%}
+/* the dashboard is built behind the welcome screen; its entry plays when the sheet slides away */
+body.welcoming #content .card,body.welcoming #content .card::after,body.welcoming .decision-panel,body.welcoming .page-heading,body.welcoming .product-choice,body.welcoming .nav-mini .nav-ini{animation-play-state:paused!important}
+/* status bar fills with a transform instead of width */
+.ws-status-fill{width:100%;transform:scaleX(var(--p,0));transform-origin:left center;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.welcome,.welcome .ws-card,.welcome .ws-check,.welcome .ws-ring,.welcome .ws-spark{will-change:transform,opacity}
+body.dashboard-in .app-shell{will-change:transform,opacity}
+body.gated .app-shell{visibility:hidden}
+@media(prefers-reduced-motion:no-preference){body.revealing .app-shell{animation:fade .36s ease both}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+/* slide: move only (no scale), and keep counting digits from re-laying-out the whole page */
+@keyframes dash-in{from{transform:translateY(70px);opacity:0}60%{opacity:1}to{transform:none;opacity:1}}
+.metric-card,.scenario-hero{contain:layout style}
+.metric-value,.scenario-invest strong{font-variant-numeric:tabular-nums}
+/* the page is released 0.26 s before the sheet moves: start its rise and card entry in step with the slide */
+@media(prefers-reduced-motion:no-preference){
+  body.dashboard-in .app-shell{animation:dash-in .9s cubic-bezier(.2,.85,.25,1) .38s both}
+  body.dashboard-in #content.entering .card,body.dashboard-in #content.entering .card::after{animation-delay:calc(.26s + var(--i,0) * 84ms)}
+}
+/* build the page's GPU layer while it's still hidden behind the welcome sheet, not at the start of the slide */
+body.welcoming .app-shell,body.dashboard-in .app-shell{will-change:transform,opacity}
+.metric-card,.scenario-hero{contain:content}
