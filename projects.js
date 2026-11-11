@@ -3,7 +3,7 @@ import {bessScenario} from './domain/bess.js';
 const sources={solar:'demo-solar',hybrid:'demo-hybrid',battery:'demo-bess'};
 export const productIds=Object.keys(sources);
 // Keys added after launch: older saved projects may not have them, the engine treats missing as 0
-export const optionalKeys=['revenue2_y1','revenue2_growth','customer_saving_y1'];
+export const optionalKeys=['revenue2_y1','revenue2_growth','customer_saving_y1','revenue_growth_late','revenue2_growth_late','growth_switch_year','revenue2_reset_every','revenue2_degradation','replacement2_cost','replacement2_year','replacement2_every','tax_rate','depreciation_years','debt_share','debt_rate','debt_years'];
 // Battery numbers come from the Excel BESS model (domain/bess.js, 'min' or 'max' cost case); other products keep their demo scenarios
 export const template=(id,level='min')=>({...DEMO_SCENARIOS.find(s=>s.id===sources[id]),...(id==='battery'?{...bessScenario(level),note:'BESS Feasibility Model_rev01.xlsx · '+level}:{})});
 const uid=()=>globalThis.crypto?.randomUUID?.()??'project-'+Date.now()+'-'+Math.random().toString(36).slice(2);

@@ -1,5 +1,5 @@
 // Plain-language reason for one year's net cash flow, shown when a year is clicked.
-// Uses the same identity as buildCashflows(): net = revenue − O&M − other − replacement + salvage.
+// Uses the same identity as buildCashflows(): net = revenue − O&M − other − replacement − tax + salvage.
 const baht = v => Math.round(v).toLocaleString('en-US') + ' บาท';
 
 export function explainYear(row, previous = null) {
@@ -8,6 +8,7 @@ export function explainYear(row, previous = null) {
     ? `เงินลงทุนเริ่มต้น −${baht(-row.net_cf)}`
     : `รายได้ ${baht(row.revenue)} − O&M ${baht(row.om_cost)} − ค่าใช้จ่ายอื่น ${baht(row.other_cost)}`
       + (row.replacement ? ` − เปลี่ยนอุปกรณ์ ${baht(row.replacement)}` : '')
+      + (row.tax ? ` − ภาษี ${baht(row.tax)}` : '')
       + (row.salvage ? ` + มูลค่าซาก ${baht(row.salvage)}` : '')
       + ` = ${row.net_cf < 0 ? '−' : ''}${baht(Math.abs(row.net_cf))}`;
 

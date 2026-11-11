@@ -37,6 +37,7 @@
 | `domain/model.js` | กระแสเงินสดรายปี + เรียกสูตรการเงิน | `Cash Flow_min/max` |
 | `domain/finance.js` | NPV, IRR, Payback (ปกติ/คิดลด), LCOE | `Summary_min/max` |
 | `domain/inputs.js` | ข้อมูลดิบ (บิล ใบเสนอราคา เงื่อนไข กฟผ.) → ช่องของแบบจำลอง ตามสูตรในไฟล์ input | `reports/EGAT_Platform_Input_แยกตามผลิตภัณฑ์.xlsx` ตรวจด้วย `inputs.test.mjs` |
+| `domain/risk.js` | จำลองความเสี่ยง 1,000 รอบ (สุ่มค่าในช่วง ± แบบสามเหลี่ยม) → โอกาส NPV > 0, P10/P50/P90 | — |
 
 ```js
 import { bessScenario } from './domain/bess.js';
@@ -65,9 +66,14 @@ npm install
 #   VITE_SUPABASE_URL=https://hdreqbadncphcxlyxfrh.supabase.co
 #   VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 npm run dev      # http://localhost:5193
-npm test         # 36 tests
+npm test         # 40 tests
 npm run build
 ```
 ใช้เฉพาะ publishable key ฝั่งหน้าเว็บ ห้ามใส่ service_role / secret key
 
 ข้อมูลตัวอย่างเป็นสถานการณ์สมมติ ไม่ใช่ผลตอบแทนที่รับประกัน
+
+## ตรวจกับ Excel จริง (`tools/excel/`)
+- `build_input_workbook.py` สร้างไฟล์ `reports/EGAT_Platform_Input_แยกตามผลิตภัณฑ์.xlsx` (ต้องมี openpyxl)
+- `run_excel_cases.py` กรอกแต่ละกรณีลงไฟล์ ให้ Microsoft Excel คำนวณใหม่ (AppleScript) แล้วเก็บผลเป็น `inputs.fixture.json`
+- `inputs.test.mjs` เทียบแพลตฟอร์มกับผลของ Excel: 39 กรณี × 3 ผลิตภัณฑ์ รวมทุกการจับคู่ตัวเลือก, เปลี่ยนแบต, กฎ Demand 70%, ค่าไฟขึ้น 2 ช่วง, ภาษี และเงินกู้

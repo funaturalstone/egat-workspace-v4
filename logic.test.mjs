@@ -149,3 +149,28 @@ test('customer saving override replaces the 365-day estimate', () => {
   close(res.customer.savingYear, 8733.24, 1e-12, 'override');
   close(res.customer.costBeforeYear - res.customer.costAfterYear, 8733.24, 1e-12, 'before − after');
 });
+
+test('new cash-flow features follow their formulas', () => {
+  const base = { initial_investment: 1e7, project_life: 15, discount_rate: 0.08, revenue_y1: 1e6, revenue_growth: 0.01, om_y1: 1e5, om_growth: 0.01, other_y1: 0, other_growth: 0,
+    salvage_value: -2e5, replacement_year: 12, replacement_cost: 3e5, energy_y1_kwh: 1e5, decision_override: 'auto',
+    revenue2_y1: 2e5, revenue2_growth: -0.02, revenue2_degradation: 0.025, revenue2_reset_every: 6,
+    replacement2_cost: 5e5, replacement2_every: 6, growth_switch_year: 5, revenue_growth_late: 0.03, revenue2_growth_late: 0.005, tax_rate: 0.2 };
+  const rows = buildCashflows(base);
+  for (const row of rows.slice(1)) {
+    const t = row.year, N = 5;
+    const gf = (g, gl) => (1 + g) ** (Math.min(t, N) - 1) * (1 + gl) ** Math.max(0, t - N);
+    close(row.revenue1, 1e6 * gf(0.01, 0.03), 1e-12, `y${t} revenue 1 with growth switch`);
+    close(row.revenue2, 2e5 * gf(-0.02, 0.005) / (1 - 0.025) ** (Math.floor((t - 1) / 6) * 6), 1e-12, `y${t} revenue 2 resets every 6 years`);
+    assert.equal(row.replacement2, t % 6 === 0 && t < 15 ? 5e5 : 0, `y${t} battery swap`);
+    const dep = 1e7 / 15, tax = Math.max(0, 0.2 * (row.revenue - row.om_cost - row.other_cost - row.replacement - dep));
+    close(row.tax, tax, 1e-12, `y${t} tax`);
+    close(row.net_cf, row.revenue - row.om_cost - row.other_cost - row.replacement - row.tax + row.salvage, 1e-12, `y${t} net`);
+  }
+  assert.equal(rows.at(-1).salvage, -2e5, 'negative salvage = decommissioning cost');
+  const res = computeScenario({ ...base, debt_share: 0.6, debt_rate: 0.05, debt_years: 10 });
+  const pay = 6e6 * 0.05 / (1 - 1.05 ** -10);
+  close(res.equity.payment, pay, 1e-12, 'annuity payment');
+  assert.ok(Math.abs(res.equity.rows[10].balance) < 1e-6, 'loan repaid after 10 years');
+  assert.equal(res.equity.rows[0].net_cf, -4e6, 'equity pays investment minus loan');
+  assert.equal(computeScenario(base).equity, null, 'no loan → no equity view');
+});

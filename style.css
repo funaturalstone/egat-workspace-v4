@@ -647,3 +647,32 @@ body.welcoming .app-shell,body.dashboard-in .app-shell{will-change:transform,opa
 .raw-table td.how{color:#7f95ad;font-size:11px}
 .raw-wait{padding:18px;color:var(--muted);font-size:13px}
 @media (max-width:620px){.raw-head{flex-direction:column}.raw-table td.how{display:none}}
+.raw-field.optional .raw-badge{color:#7f95ad;font-weight:500}
+.more-fields{margin-top:24px;border-top:1px solid var(--line);padding-top:16px}
+.more-fields summary{cursor:pointer;color:var(--muted);font-size:12px}
+.more-fields[open] summary{color:var(--text)}
+.risk-card{margin-top:16px}
+.risk-card h3{font-size:15px}
+.risk-intro{color:var(--muted);font-size:11px;line-height:1.5;margin-top:8px}
+.risk-vars{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 14px;margin-top:16px}
+.risk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+.risk-grid div{background:#101c30;border:1px solid #ffffff12;border-radius:10px;padding:12px}
+.risk-grid small{display:block;color:var(--muted);font-size:11px}
+.risk-grid strong{display:block;margin-top:6px;font-size:18px;color:var(--text);font-variant-numeric:tabular-nums}
+.risk-grid strong.positive{color:var(--mint)}.risk-grid strong.negative{color:var(--orange)}
+.risk-hist{width:100%;height:auto;margin-top:14px}
+@media (max-width:620px){.risk-vars,.risk-grid{grid-template-columns:1fr}}
+@media (max-width:620px){
+  .raw-group .form-grid,.raw-selectors{grid-template-columns:1fr}
+  .raw-table{font-size:11px}
+  .raw-table th,.raw-table td{padding:6px 4px}
+  .raw-table td:first-child{word-break:break-word}
+  .raw-table td.num{white-space:normal}
+}
+@media (max-width:620px){.raw-table th:nth-child(4){display:none}}
+@media (max-width:620px){.raw-table{table-layout:fixed}.raw-table td,.raw-table th{overflow-wrap:anywhere}}
+@media (max-width:620px){
+  .raw-table th:nth-child(1),.raw-table td:nth-child(1){width:46%;white-space:normal;word-break:break-all}
+  .raw-table th:nth-child(2),.raw-table td:nth-child(2){width:32%}
+  .raw-table th:nth-child(3),.raw-table td:nth-child(3){width:22%}
+}
