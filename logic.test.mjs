@@ -19,7 +19,8 @@ function randomScenario(r) {
   const replace = r() < 0.4;
   return {
     initial_investment: 1e6 + r() * 2e7, project_life: life, discount_rate: 0.02 + r() * 0.12,
-    revenue_y1: 2e5 + r() * 3e6, revenue_growth: r() * 0.05,
+    revenue_y1: 2e5 + r() * 3e6, revenue_growth: -0.05 + r() * 0.1,
+    revenue2_y1: r() < 0.5 ? r() * 5e5 : 0, revenue2_growth: -0.05 + r() * 0.1,
     om_y1: r() * 3e5, om_growth: r() * 0.04, other_y1: r() * 2e5, other_growth: r() * 0.04,
     salvage_value: r() * 1e6, replacement_year: replace ? 1 + Math.floor(r() * life) : 0, replacement_cost: replace ? r() * 5e6 : 0,
     energy_y1_kwh: 5e4 + r() * 5e5, decision_override: 'auto',
@@ -42,7 +43,7 @@ test('every cash-flow row follows the formulas', () => {
     for (const row of rows) {
       const t = row.year;
       if (t > 0) {
-        close(row.revenue, s.revenue_y1 * (1 + s.revenue_growth) ** (t - 1), 1e-12, `${name} y${t} revenue`);
+        close(row.revenue, s.revenue_y1 * (1 + s.revenue_growth) ** (t - 1) + (s.revenue2_y1 ?? 0) * (1 + (s.revenue2_growth ?? 0)) ** (t - 1), 1e-12, `${name} y${t} revenue`);
         close(row.om_cost, s.om_y1 * (1 + s.om_growth) ** (t - 1), 1e-12, `${name} y${t} O&M`);
         close(row.other_cost, s.other_y1 * (1 + s.other_growth) ** (t - 1), 1e-12, `${name} y${t} other`);
         assert.equal(row.replacement, s.replacement_year > 0 && t === s.replacement_year ? s.replacement_cost : 0, `${name} y${t} replacement only in its year`);
@@ -60,7 +61,11 @@ test('NPV, IRR and the accept/reject rule agree with the cash flows', () => {
   for (const [name, s] of CASES) {
     const res = computeScenario(s), cfs = res.cashflows.map(c => c.net_cf);
     close(res.npv, res.cashflows.at(-1).discounted_cumulative, 1e-9, name + ' NPV = last discounted cumulative');
-    if (res.irr != null) assert.ok(Math.abs(npv(res.irr, cfs)) < 1e-3, `${name} NPV at IRR ≈ 0`);
+    if (res.irr != null) {
+      // relative to the size of the discounted terms: at very negative IRRs the terms reach 1e20+
+      const scale = cfs.reduce((a, cf, t) => a + Math.abs(cf / (1 + res.irr) ** t), 0);
+      assert.ok(Math.abs(npv(res.irr, cfs)) < Math.max(1e-3, 1e-9 * scale), `${name} NPV at IRR ≈ 0`);
+    }
     if (signChanges(cfs) === 1 && res.irr != null) {
       // conventional project: NPV > 0 exactly when IRR > discount rate
       assert.equal(res.npv > 0, res.irr > s.discount_rate, name + ' NPV sign matches IRR vs hurdle');
@@ -125,4 +130,22 @@ test('explanation covers every negative year in every case', () => {
       if (row.year === 0) assert.equal(why.cause, 'investment');
     });
   }
+});
+
+test('older saved projects without the new optional fields still load and compute', async () => {
+  const { template, validWorkspace, optionalKeys } = await import('./projects.js');
+  const old = { ...template('hybrid') };
+  for (const k of optionalKeys) delete old[k];
+  const ws = { version: 1, selected: 'hybrid', projects: [{ id: 'a', product: 'hybrid', name: 'เก่า', scenario: old }], active: { solar: null, hybrid: 'a', battery: null } };
+  assert.ok(validWorkspace(ws), 'old project is still valid');
+  const a = computeScenario(old), b = computeScenario({ ...old, revenue2_y1: 0, revenue2_growth: 0, customer_saving_y1: 0 });
+  assert.equal(a.npv, b.npv);
+  assert.equal(a.customer.savingYear, b.customer.savingYear);
+});
+
+test('customer saving override replaces the 365-day estimate', () => {
+  const s = { ...DEMO_SCENARIOS[0], customer_saving_y1: 8733.24 };
+  const res = computeScenario(s);
+  close(res.customer.savingYear, 8733.24, 1e-12, 'override');
+  close(res.customer.costBeforeYear - res.customer.costAfterYear, 8733.24, 1e-12, 'before − after');
 });

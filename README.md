@@ -36,6 +36,7 @@
 | `domain/bess.js` | ขนาด BESS + ต้นทุน/kWh + ค่าไฟ → เงินลงทุน, ผลประหยัดปีแรก, มูลค่าซาก | `BESS`, `Inputs_min/max` |
 | `domain/model.js` | กระแสเงินสดรายปี + เรียกสูตรการเงิน | `Cash Flow_min/max` |
 | `domain/finance.js` | NPV, IRR, Payback (ปกติ/คิดลด), LCOE | `Summary_min/max` |
+| `domain/inputs.js` | ข้อมูลดิบ (บิล ใบเสนอราคา เงื่อนไข กฟผ.) → ช่องของแบบจำลอง ตามสูตรในไฟล์ input | `reports/EGAT_Platform_Input_แยกตามผลิตภัณฑ์.xlsx` ตรวจด้วย `inputs.test.mjs` |
 
 ```js
 import { bessScenario } from './domain/bess.js';
@@ -64,7 +65,7 @@ npm install
 #   VITE_SUPABASE_URL=https://hdreqbadncphcxlyxfrh.supabase.co
 #   VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 npm run dev      # http://localhost:5193
-npm test         # 30 tests
+npm test         # 36 tests
 npm run build
 ```
 ใช้เฉพาะ publishable key ฝั่งหน้าเว็บ ห้ามใส่ service_role / secret key

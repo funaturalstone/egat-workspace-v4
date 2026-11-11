@@ -616,3 +616,34 @@ body.welcoming .app-shell,body.dashboard-in .app-shell{will-change:transform,opa
 .project-row.selected{box-shadow:inset 3px 0 #ffb28b;background:#ffb28b14}
 .project-row.selected .project-dot{background:#ffb28b}
 .nav-ini.active{background:linear-gradient(135deg,#ffd2a733,#f3a38726);color:#ffc39a;box-shadow:inset 3px 0 #ffb28b}
+
+/* ===== raw-input form (domain/inputs.js · raw-inputs.js) ===== */
+.mode-switch{display:inline-flex;gap:4px;padding:4px;margin-bottom:14px;background:#101c30;border:1px solid #ffffff18;border-radius:10px}
+.mode-switch button{padding:8px 14px;border:0;border-radius:7px;background:none;color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
+.mode-switch button.active{background:var(--orange);color:#1b2234;font-weight:600}
+.raw-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.raw-status{flex:none;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;background:#ffb28b22;color:var(--orange)}
+.raw-status.done{background:#bdddd422;color:var(--mint)}
+.raw-group{margin-top:26px;padding-top:18px;border-top:1px solid var(--line)}
+.raw-group h4{font-size:13px;color:var(--text);margin:0}
+.raw-group .form-grid{margin-top:16px}
+.raw-label{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.raw-badge{font-size:10px;font-weight:600;white-space:nowrap}
+.raw-field.missing .raw-badge{color:#ffc1a4}
+.raw-field.missing .input-wrap{border-color:#ffb28b66}
+.raw-field.prefilled .raw-badge{color:var(--mint)}
+.raw-field.prefilled .input-wrap input{color:var(--mint)}
+.raw-field.ok .raw-badge{color:var(--blue)}
+.raw-who{font-size:10px;line-height:1.45;color:#7f95ad}
+.raw-who b{color:#a5b9d0;font-weight:600}
+.input-wrap select{width:100%;padding:12px 0;font:inherit;font-size:14px;background:none;border:0;outline:0;color:#e7eef6}
+.input-wrap select option{background:#101c30}
+.raw-calc{margin-top:16px;overflow-x:auto}
+.raw-calc h3{font-size:15px;margin-bottom:12px}
+.raw-table{width:100%;border-collapse:collapse;font-size:12px}
+.raw-table th{text-align:left;font-weight:600;color:var(--muted);padding:8px;border-bottom:1px solid var(--line)}
+.raw-table td{padding:8px;border-bottom:1px solid var(--line);color:var(--text);vertical-align:top}
+.raw-table td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.raw-table td.how{color:#7f95ad;font-size:11px}
+.raw-wait{padding:18px;color:var(--muted);font-size:13px}
+@media (max-width:620px){.raw-head{flex-direction:column}.raw-table td.how{display:none}}

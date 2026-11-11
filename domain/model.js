@@ -6,7 +6,7 @@ import { npv, irr, paybackPeriod, discountedPayback, lcoe } from "./finance.js";
 /**
  * สร้างตารางกระแสเงินสดรายปีจาก scenario
  * ปีที่ 0 = จ่าย CAPEX (net_cf ติดลบ)
- * ปีที่ 1..life = Revenue - O&M - Other (+ Salvage ปีสุดท้าย)
+ * ปีที่ 1..life = Revenue(ส่วนหลัก + ส่วนที่ 2) - O&M - Other - Replacement (+ Salvage ปีสุดท้าย)
  */
 export function buildCashflows(s) {
   const rows = [];
@@ -14,6 +14,8 @@ export function buildCashflows(s) {
   rows.push({
     year: 0,
     revenue: 0,
+    revenue1: 0,
+    revenue2: 0,
     om_cost: 0,
     other_cost: 0,
     replacement: 0,
@@ -22,9 +24,13 @@ export function buildCashflows(s) {
   });
 
   for (let t = 1; t <= s.project_life; t++) {
-    const revenue = s.revenue_y1 * Math.pow(1 + s.revenue_growth, t - 1);
-    const om = s.om_y1 * Math.pow(1 + s.om_growth, t - 1);
-    const other = s.other_y1 * Math.pow(1 + s.other_growth, t - 1);
+    // รายได้ 2 ส่วน: ส่วนหลัก + ส่วนที่ 2 (เช่น ส่วนแบตของ Solar + Battery) แต่ละส่วนโตไม่เท่ากันได้
+    // อัตราเติบโตติดลบได้ (เช่น แผง/แบตเสื่อมเร็วกว่าค่าไฟขึ้น)
+    const revenue1 = s.revenue_y1 * Math.pow(1 + s.revenue_growth, t - 1);
+    const revenue2 = (s.revenue2_y1 ?? 0) * Math.pow(1 + (s.revenue2_growth ?? 0), t - 1);
+    const revenue = revenue1 + revenue2;
+    const om = s.om_y1 * Math.pow(1 + (s.om_growth ?? 0.01), t - 1);
+    const other = s.other_y1 * Math.pow(1 + (s.other_growth ?? 0.01), t - 1);
     // ค่าเปลี่ยนอุปกรณ์ใหญ่ (เช่น แบตเตอรี่) จ่ายครั้งเดียวในปีที่กำหนด
     const replacement =
       s.replacement_year > 0 && t === s.replacement_year ? s.replacement_cost : 0;
@@ -33,6 +39,8 @@ export function buildCashflows(s) {
     rows.push({
       year: t,
       revenue,
+      revenue1,
+      revenue2,
       om_cost: om,
       other_cost: other,
       replacement,
@@ -89,7 +97,10 @@ export function computeScenario(s) {
   const offRate = s.offpeak_rate ?? 2.6037;
   const peakKwhDay = s.peak_energy_kwh_day ?? 400;
   const costBeforeYear = peakKwhDay * peakRate * days; // จ่ายราคา peak ทั้งหมด
-  const costAfterYear = peakKwhDay * offRate * days; // ชาร์จ off-peak
+  let costAfterYear = peakKwhDay * offRate * days; // ชาร์จ off-peak
+  // ถ้ากรอกผลประหยัดของลูกค้าที่คำนวณละเอียดแล้ว (หักไฟหาย นับวันจริง รวมค่า Demand หักส่วนแบ่ง กฟผ.) ให้ใช้ค่านั้น
+  const savingOverride = s.customer_saving_y1 ?? 0;
+  if (savingOverride > 0) costAfterYear = costBeforeYear - savingOverride;
   const customerSavingYear = costBeforeYear - costAfterYear;
 
   // ประหยัดสะสมรายปีตลอดอายุโครงการ (สำหรับกราฟ area)

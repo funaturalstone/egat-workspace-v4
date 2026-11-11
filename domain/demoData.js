@@ -2,6 +2,7 @@
 const base = {
   revenue_growth: .02, om_growth: .01, other_growth: .01, discount_rate: .08,
   replacement_year: 0, replacement_cost: 0, decision_override: 'auto',
+  revenue2_y1: 0, revenue2_growth: 0, customer_saving_y1: 0,
   peak_rate: 4.1839, offpeak_rate: 2.6037, peak_energy_kwh_day: 400,
   parent_id: null,
   note: 'ข้อมูลสมมติสำหรับทดลองใช้งาน ไม่ใช่ข้อมูลโครงการจริง',
