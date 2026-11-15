@@ -1,4 +1,5 @@
 import {computeScenario} from './domain/model.js';
+import {isSample,currentBill} from './domain/khunTon.js';
 export const fmt=(v,d=0)=>Number(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
 export const peach='#ffb28b',mint='#bdddd4',blue='#82a7d4',grid='#ffffff0b';
 const n=v=>Number(v).toFixed(2);
@@ -41,7 +42,19 @@ export function customerSavings(r,product=false){const s=r.scenario,c=r.customer
   const k1=product==='battery'?(share>0?(1-share)/share:0):(disc<1?disc/(1-disc):0),k2=product==='hybrid'&&share>0?(1-share)/share:0;
   let cb=0,ca=0,cum=0;
   const cumulative=r.cashflows.slice(1).map(row=>{const pay=row.revenue1+row.revenue2,keep=row.revenue1*k1+row.revenue2*k2;cb+=pay+keep;ca+=pay;cum+=keep;return {year:row.year,saving:keep,pay,cumulative:cum,before:cb,after:ca};});
-  const y1=cumulative[0]??{saving:0,pay:0},before=y1.pay+y1.saving,after=y1.pay,pct=x=>Number((x*100).toFixed(1))+'%';
+  const pct=x=>Number((x*100).toFixed(1))+'%';
+  // Khun Ton: compare his whole bill (real bills, growing with the tariff) with that bill minus what the system saves him
+  // Bill year t = (6-month bills × 2) × (1 + tariff growth)^(t−1), same usage. The bill includes VAT 7%, so the
+  // savings and EGAT's charge in this view carry VAT too (× 1.07); before VAT the year-1 saving is the Excel figure.
+  if(isSample(s)){const bill=currentBill(),esc=v.esc??0,VAT=1.07;let cb2=0,ca2=0;
+   const whole=cumulative.map(row=>{const b=bill.year*Math.pow(1+esc,row.year-1),keep=row.saving*VAT;cb2+=b;ca2+=b-keep;return {...row,bill:b,saving:keep,savingExVat:row.saving,pay:row.pay*VAT,before:cb2,after:ca2,cumulative:cb2-ca2};});
+   const y1=whole[0],grid=y1.bill-y1.pay-y1.saving;
+   return {kind:'bill',before:y1.bill,after:y1.bill-y1.saving,saving:y1.saving,savingExVat:y1.savingExVat,growth:esc,bill,beforeLabel:'ไม่ติดตั้ง',afterLabel:'ติดตั้ง',beforeTitle:'ไม่ติดตั้ง: ค่าไฟปีแรกของคุณต้น',afterTitle:'ติดตั้ง: ค่าไฟการไฟฟ้า + จ่าย กฟผ.',
+    source:'ค่าไฟจริงของคุณต้น · รวม VAT',
+    factsBefore:[['ค่าไฟจริง 6 เดือน ('+bill.from+' – '+bill.to+')',fmt(bill.half,2)+' บาท'],['ปีแรก = 6 เดือน × 2',fmt(bill.year)+' บาท'],['ปีต่อไป','ขึ้นตามค่าไฟปีละ '+pct(esc)+' · ใช้ไฟเท่าเดิม']],
+    factsAfter:[['จ่ายการไฟฟ้า (ส่วนที่เหลือ)',fmt(grid)+' บาท/ปี'],['จ่าย กฟผ.',fmt(y1.pay)+' บาท/ปี'],['ประหยัดปีแรก',fmt(y1.saving)+' บาท ('+fmt(y1.saving/y1.bill*100,1)+'% ของค่าไฟ) · ก่อน VAT '+fmt(y1.savingExVat)]],
+    cumulative:whole,life};}
+  const y1=cumulative[0]??{saving:0,pay:0},before=y1.pay+y1.saving,after=y1.pay;
   const parts=product==='solar'?'ส่วนลด PPA '+pct(disc):product==='battery'?pct(1-share)+' ของผลประหยัดแบต':'ส่วนลด PPA '+pct(disc)+' + '+pct(1-share)+' ของผลประหยัดแบต';
   return {kind:'raw',before,after,saving:y1.saving,beforeLabel:'ไม่ติดตั้ง',afterLabel:'ติดตั้ง',beforeTitle:'ไม่ติดตั้ง: จ่ายค่าไฟส่วนนี้ให้การไฟฟ้า',afterTitle:'ติดตั้ง: จ่ายให้ กฟผ. แทน',
    source:product==='solar'?'ส่วนลดค่าไฟ PPA':product==='battery'?'ส่วนแบ่งผลประหยัดจากแบต':'ส่วนลด PPA + ส่วนแบ่งผลประหยัดแบต',
@@ -73,14 +86,14 @@ export function savings(r,mode='annual',product=false,height=200,width){
   rows.slice(1).forEach(v=>{b+=`<rect class="hit" data-pick="${v.year}" x="${n(x(v.year)-st/2)}" y="${T}" width="${n(st)}" height="${h-T-B}" fill="transparent"/><line class="pt" data-pick="${v.year}" x1="${n(x(v.year))}" y1="${n(y(v.before/1e6))}" x2="${n(x(v.year))}" y2="${n(y(v.after/1e6))}" stroke="#eef2f8" stroke-opacity=".6" stroke-dasharray="2 3"/><circle class="pt" data-pick="${v.year}" cx="${x(v.year)}" cy="${y(v.before/1e6)}" r="4.5" fill="${peach}" stroke="#1b2b43" stroke-width="2"/><circle class="pt" data-pick="${v.year}" cx="${x(v.year)}" cy="${y(v.after/1e6)}" r="4.5" fill="${mint}" stroke="#1b2b43" stroke-width="2"/>`;});
   // end labels: what each path costs, and the saving between them
   const ex=x(c.life),yb=y(end.before/1e6),ya=y(end.after/1e6),mid=(yb+ya)/2;
-  b+=txt(ex-6,yb-9,'ไม่ติดตั้ง '+fmt(end.before/1e6,2),`text-anchor="end" style="fill:${peach};font-size:10px;font-weight:600"`)+txt(ex-6,ya+16,'ติดตั้ง '+fmt(end.after/1e6,2),`text-anchor="end" style="fill:${mint};font-size:10px;font-weight:600"`);
+  b+=txt(ex-6,yb-9,'ไม่ติดตั้ง '+fmt(end.before/1e6,2),`text-anchor="end" style="fill:${peach};font-size:10px;font-weight:600"`)+txt(ex-6,ya+(c.kind==='bill'?30:16),'ติดตั้ง '+fmt(end.after/1e6,2),`text-anchor="end" style="fill:${mint};font-size:10px;font-weight:600"`);
   if(ya-yb>=14)b+=`<g class="gap-tag"><line x1="${n(ex+5)}" y1="${n(yb+3)}" x2="${n(ex+5)}" y2="${n(ya-3)}" stroke="${mint}" stroke-width="1.5"/><line x1="${n(ex+2)}" y1="${n(yb+3)}" x2="${n(ex+8)}" y2="${n(yb+3)}" stroke="${mint}" stroke-width="1.5"/><line x1="${n(ex+2)}" y1="${n(ya-3)}" x2="${n(ex+8)}" y2="${n(ya-3)}" stroke="${mint}" stroke-width="1.5"/>`+txt(ex-8,mid+4,'ประหยัด '+fmt(end.cumulative/1e6,2)+' ลบ.','text-anchor="end" style="fill:#e6f5ef;font-size:10px;font-weight:700;paint-order:stroke;stroke:#1b2b43;stroke-width:3px"')+'</g>';
   return svg(W,h,`ค่าไฟสะสม ${c.life} ปี ไม่ติดตั้ง ${fmt(end.before)} บาท ติดตั้ง ${fmt(end.after)} บาท ประหยัด ${fmt(end.cumulative)} บาท`,b+txt(L2,12,'ค่าไฟสะสม · ล้านบาท','class="axis-label"')+txt(W-R2,h-1,'ปี','text-anchor="end" class="axis-label"'));}
  // million baht per year, axis in round steps (0.25 / 0.5 / 1 / 2 / 2.5 / 5 …) so it reads like the other charts
  const vals=[c.before,c.after],peak=Math.max(...vals,1)/1e6*1.12,mag=Math.pow(10,Math.floor(Math.log10(peak/4))),f=peak/4/mag,stepM=(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*mag,ticks=Math.ceil(peak/stepM),max=ticks*stepM*1e6,dec=Number.isInteger(+stepM.toFixed(6))?0:Number.isInteger(+(stepM*10).toFixed(6))?1:2,y=v=>T+(1-v/max)*(h-T-B),gap=Math.min(150,(w-L-R)/2.4),mid=L+(w-L-R)/2;let b='';for(let i=0;i<=ticks;i++){const v=stepM*i;b+=line(L,y(v*1e6),w-R,y(v*1e6))+txt(L-7,y(v*1e6)+3,v===0?'0':fmt(v,dec),'text-anchor="end" style="font-size:9px"');}
  vals.forEach((v,i)=>{const x=mid+(i?gap/2:-gap/2);b+=`<rect class="hit" data-pick="${i}" x="${x-50}" y="${T}" width="100" height="${h-T-B}" fill="transparent"/><rect data-pick="${i}" class="bar" x="${x-24}" y="${y(v)}" width="48" height="${Math.max(1,h-B-y(v))}" rx="12" fill="${i?mint:peach}" opacity=".9"><title>${i?c.afterTitle:c.beforeTitle}: ${fmt(v)} บาท/ปี</title></rect>`+txt(x,y(v)-8,fmt(v/1e6,2),'text-anchor="middle" class="value" style="font-size:11px"')+txt(x,h-12,i?c.afterLabel:c.beforeLabel,'text-anchor="middle"');});
  const top=y(c.before),bot=y(c.after),ax=mid+gap/2+40;if(c.saving>0&&ax<w-R-10)b+=line(ax,top,ax,bot,'#bdddd4aa','stroke-dasharray="3 3"')+txt(ax+6,(top+bot)/2+3,'ประหยัด '+fmt(c.saving/1e6,2)+' ลบ./ปี','style="font-size:9px;fill:#bdddd4"');
- return svg(w,h,c.kind==='ppa'?'ค่าไฟจากกริดเทียบกับค่าไฟตามสัญญา PPA':c.kind==='raw'?'ค่าไฟส่วนที่ระบบช่วยลด เทียบกับเงินที่จ่ายให้ กฟผ.':'ค่าไฟก่อนและหลังย้ายช่วงการใช้พลังงาน',b+txt(L,12,'ล้านบาท / ปี','class="axis-label"'));
+ return svg(w,h,c.kind==='ppa'?'ค่าไฟจากกริดเทียบกับค่าไฟตามสัญญา PPA':c.kind==='bill'?'ค่าไฟทั้งปีของคุณต้น ก่อนและหลังติดตั้ง':c.kind==='raw'?'ค่าไฟส่วนที่ระบบช่วยลด เทียบกับเงินที่จ่ายให้ กฟผ.':'ค่าไฟก่อนและหลังย้ายช่วงการใช้พลังงาน',b+txt(L,12,'ล้านบาท / ปี','class="axis-label"'));
 }
 // One row per assumption, largest NPV swing first (shared with the click-for-details panel).
 export function sensitivityItems(r,range=.2){const s=r.scenario,base=r.npv;return [['รายได้ปีแรก','revenue_y1'],['เงินลงทุน','initial_investment'],['อัตราคิดลด','discount_rate'],['ค่า O&M','om_y1'],['มูลค่าซาก','salvage_value']].map(([name,key])=>{const vary=f=>key==='revenue_y1'?{...s,revenue_y1:s.revenue_y1*f,revenue2_y1:(s.revenue2_y1??0)*f}:{...s,[key]:s[key]*f};return {name,key,low:(computeScenario(vary(1-range)).npv-base)/1e6,high:(computeScenario(vary(1+range)).npv-base)/1e6};}).sort((a,b)=>Math.abs(b.high-b.low)-Math.abs(a.high-a.low));}

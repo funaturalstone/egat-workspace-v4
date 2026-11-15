@@ -2,6 +2,7 @@
 // Every input value, the note behind it, the sensitivity ranges and the Excel results the platform must reproduce.
 import { derive, defaultRaw } from './inputs.js';
 import { computeScenario } from './model.js';
+import { MONTHS } from './khunTonData.js';
 
 export const SAMPLE_ID = 'khun-ton';
 export const SAMPLE_NAME = 'คุณต้น · โรงงานสิ่งทอ (ข้อมูลจริง)';
@@ -69,6 +70,13 @@ const FOR = {
   battery: ['esc', 'ft', 'bpack', 'rte', 'relT', 'bdeg', 'bom', 'share', 'bsalv'],
 };
 export const isSample = s => s?.sample === SAMPLE_ID;
+
+// Khun Ton's whole electricity bill today, from his real bills May–Oct 2569 (sheet "ค่าไฟ 6 เดือน").
+// 6 months paid 1,760,110.53 baht (bills include VAT 7%) → one year = × 2 = 3,520,221 baht, as he actually pays.
+export function currentBill() {
+  const half = MONTHS.reduce((a, m) => a + m.baht, 0);
+  return { half, year: half * 12 / MONTHS.length, monthly: half / MONTHS.length, from: MONTHS[0].month, to: MONTHS.at(-1).month };
+}
 
 // NPV and IRR of a raw-input project after changing some inputs.
 function run(product, raw, change, linked) {

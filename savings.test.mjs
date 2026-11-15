@@ -30,15 +30,19 @@ test('raw-input projects: customer saving equals Excel in year 1 and follows the
   const excel = { solar: 108426.73628835614, hybrid: 124045.86428835616, battery: 15619.128000000004 };
   for (const p of ['solar', 'hybrid', 'battery']) {
     const s = sampleScenario(p), r = computeScenario(s), c = customerSavings(r, p), v = s.raw.values;
-    assert.equal(c.kind, 'raw');
-    assert.ok(Math.abs(c.saving - excel[p]) < 1e-6, `${p} year-1 saving ${c.saving}`);
-    assert.ok(Math.abs(c.after - r.cashflows[1].revenue) < 1e-6, `${p}: after = what EGAT earns in year 1`);
+    assert.equal(c.kind, 'bill', 'Khun Ton is shown against his whole bill');
+    assert.ok(Math.abs(c.savingExVat - excel[p]) < 1e-6, `${p} year-1 saving before VAT ${c.savingExVat}`);
+    assert.ok(Math.abs(c.saving - excel[p] * 1.07) < 1e-6, `${p} year-1 saving with VAT, like the bill`);
+    // his real bills May–Oct 2569 total 1,760,110.53 baht → one year = × 2 = 3,520,221.06 baht (as paid, with VAT)
+    assert.ok(Math.abs(c.before - 1760110.53 * 2) < 1e-6, `${p}: year-1 bill ${c.before}`);
+    assert.ok(Math.abs(c.before - c.after - c.saving) < 1e-6);
+    c.cumulative.forEach(row => assert.ok(Math.abs(row.bill - c.before * (1 + v.esc) ** (row.year - 1)) < 1e-6, `${p} bill grows with the tariff`));
     assert.equal(c.cumulative.length, s.project_life);
     for (const row of c.cumulative) {
       const cf = r.cashflows[row.year];
       const keep = p === 'battery' ? cf.revenue1 * (1 - v.share) / v.share
         : cf.revenue1 * v.disc / (1 - v.disc) + (p === 'hybrid' ? cf.revenue2 * (1 - v.share) / v.share : 0);
-      assert.ok(Math.abs(row.saving - keep) < 1e-6, `${p} year ${row.year}`);
+      assert.ok(Math.abs(row.savingExVat - keep) < 1e-6 && Math.abs(row.saving - keep * 1.07) < 1e-6, `${p} year ${row.year}`);
     }
     assert.ok(Math.abs(c.cumulative.at(-1).before - c.cumulative.at(-1).after - c.cumulative.at(-1).cumulative) < 1e-6);
   }
