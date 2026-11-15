@@ -49,3 +49,13 @@ test('typed customer saving: the detail panel shows the typed saving, not an Off
   assert.equal(c.saving, 50000);
   assert.ok(!c.factsAfter.some(([k]) => k.includes('Off-peak')));
 });
+
+test('chart axes: every gridline sits on a round number and the data fits inside', async () => {
+  const { axis } = await import('./charts.js');
+  for (const [lo, hi, parts] of [[0, 0.582, 3], [-3.75, 3.59, 4], [-0.95, 0.66, 3], [0, 24.2, 3], [-1.6, 4.4, 3], [0, 0.0731, 3]]) {
+    const a = axis(lo, hi, parts);
+    assert.ok(a.lo <= lo && a.hi >= hi, `${lo}..${hi} fits`);
+    for (const t of a.ticks) assert.ok(Math.abs(t / a.step - Math.round(t / a.step)) < 1e-9, `${t} is a multiple of ${a.step}`);
+    assert.ok([1, 2, 2.5, 5].some(m => Math.abs(a.step / 10 ** Math.floor(Math.log10(a.step)) - m) < 1e-9), `step ${a.step} is 1/2/2.5/5 × 10ⁿ`);
+  }
+});
