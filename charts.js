@@ -20,21 +20,47 @@ export function cumulative(r,visible={simple:true,discount:true},height=285,widt
  return svg(w,h,`กระแสเงินสดสะสม ปกติ ${r.payback==null?'ไม่คืนทุน':fmt(r.payback,2)+' ปี'} คิดลด ${r.discounted_payback==null?'ไม่คืนทุน':fmt(r.discounted_payback,2)+' ปี'}`,body);
 }
 export function annual(r,height=210,width,years=null){const rows=r.cashflows.slice(1,years?years+1:undefined),w=width??420,h=height,L=38,R=12,T=22,B=30,lo=Math.min(0,...rows.map(v=>v.net_cf/1e6)),hi=Math.max(.1,...rows.map(v=>v.net_cf/1e6))*1.18;const x=t=>L+(t-.5)/rows.length*(w-L-R),y=v=>T+(hi-v)/(hi-lo)*(h-T-B),bw=Math.min(22,(w-L-R)/rows.length*.6);let b=txt(L,11,'ล้านบาท','class="axis-label"');for(let i=0;i<4;i++){const v=lo+(hi-lo)*i/3;b+=line(L,y(v),w-R,y(v))+txt(L-7,y(v)+3,fmt(v,1),'text-anchor="end"');}b+=line(L,y(0),w-R,y(0),'#91a9bf44');const colW=(w-L-R)/rows.length;rows.forEach(v=>{b+=`<rect class="hit" data-pick="${v.year}" x="${n(x(v.year)-colW/2)}" y="${T}" width="${n(colW)}" height="${h-T-B}" fill="transparent"/>`;});rows.forEach(v=>{const val=v.net_cf/1e6,y0=y(0);b+=`<rect data-pick="${v.year}" class="bar${val<0?' down':''}" x="${x(v.year)-bw/2}" y="${Math.min(y0,y(val))}" width="${bw}" height="${Math.max(1,Math.abs(y(val)-y0))}" rx="${Math.min(5,bw/3)}" fill="${val<0?peach:blue}" opacity="${v.year===r.cashflows.at(-1).year?1:.8}"><title>ปี ${v.year}: ${fmt(v.net_cf)} บาท${v.replacement>0?' · เปลี่ยนอุปกรณ์ '+fmt(v.replacement)+' บาท':''}</title></rect>`;if(v.year===1||v.year===rows.length||v.year%Math.ceil(rows.length/6)===0)b+=txt(x(v.year),h-11,v.year,'text-anchor="middle"');});return svg(w,h,'กระแสเงินสดสุทธิปีที่ 1 ถึง '+rows.length,b+txt(w-R,h-1,'ปี','text-anchor="end" class="axis-label"'));}
-// Customer electricity savings for every product. Battery / Solar + Battery: move energy from Peak to Off-peak.
-// Solar PPA: solar energy bought at the PPA price instead of grid power at the Peak rate
-// (PPA price = ppa_rate, or year-1 revenue ÷ year-1 energy when not set).
-export function customerSavings(r,isSolar=false){const s=r.scenario,c=r.customer;
- if(!isSolar)return {kind:'shift',before:c.costBeforeYear,after:c.costAfterYear,saving:c.savingYear,beforeLabel:'Peak',afterLabel:'Off-peak',beforeTitle:'ค่าไฟก่อนย้ายช่วง (Peak)',afterTitle:'ค่าไฟหลังย้ายช่วง (Off-peak)',rateBefore:c.peakRate,rateAfter:c.offRate,qty:c.peakKwhDay,qtyLabel:'พลังงานต่อวัน',source:'ย้ายการใช้ไฟจาก Peak ไป Off-peak',cumulative:c.cumulative.map(v=>({...v,before:c.costBeforeYear*v.year,after:c.costAfterYear*v.year})),life:s.project_life};
- const energy=s.energy_y1_kwh??0,grid=s.peak_rate??4.1839,ppa=s.ppa_rate??(energy?s.revenue_y1/energy:0),before=energy*grid,after=energy*ppa,saving=before-after;let cum=0;
- const cumulative=Array.from({length:s.project_life},(_,i)=>{cum+=saving;return {year:i+1,saving,cumulative:cum,before:before*(i+1),after:after*(i+1)};});
- return {kind:'ppa',before,after,saving,beforeLabel:'ไฟกริด',afterLabel:'ไฟ PPA',beforeTitle:'ถ้าซื้อไฟจากกริด (Peak)',afterTitle:'จ่ายค่าไฟตามสัญญา PPA',rateBefore:grid,rateAfter:ppa,qty:energy,qtyLabel:'พลังงานโซลาร์ต่อปี',source:'ซื้อไฟโซลาร์ราคา PPA แทนไฟกริด',cumulative,life:s.project_life};}
-export function savings(r,mode='annual',isSolar=false,height=200,width){
- const c=customerSavings(r,isSolar),w=width??280,h=height,L=37,R=14,T=25,B=32;
+// Customer electricity savings (what the customer keeps each year), for the savings chart, its detail panel and the KPI card.
+// · Projects filled from raw data (input_mode 'raw'): taken from the same yearly cash flows as every other chart.
+//   The customer pays EGAT what EGAT earns (revenue1 = PPA, revenue2 = battery share) and keeps
+//   Solar: PPA discount ÷ (1 − discount) of the PPA payment · Battery: (1 − EGAT share) ÷ EGAT share of EGAT's battery income,
+//   so every year follows the same tariff growth, degradation and battery swaps as the cash flows, and year 1 equals the Excel figure.
+// · Typed-in projects: Solar = energy × (grid rate − PPA price); Battery / Solar + Battery = energy moved from Peak to Off-peak,
+//   or the customer saving typed in (customer_saving_y1). Flat every year: these inputs carry no growth.
+// product: 'solar' | 'hybrid' | 'battery' (true / false = solar / not solar, kept for older callers)
+export function customerSavings(r,product=false){const s=r.scenario,c=r.customer,life=s.project_life,v=s.raw?.values;
+ if(product===true)product='solar';else if(!product)product=(s.revenue2_y1??0)>0?'hybrid':'battery';
+ const flat=(before,after)=>{let cum=0;return Array.from({length:life},(_,i)=>{cum+=before-after;return {year:i+1,saving:before-after,cumulative:cum,before:before*(i+1),after:after*(i+1)};});};
+ if(s.input_mode==='raw'&&v){
+  const disc=product==='battery'?0:(v.disc??0),share=product==='solar'?1:(v.share??1);
+  const k1=product==='battery'?(share>0?(1-share)/share:0):(disc<1?disc/(1-disc):0),k2=product==='hybrid'&&share>0?(1-share)/share:0;
+  let cb=0,ca=0,cum=0;
+  const cumulative=r.cashflows.slice(1).map(row=>{const pay=row.revenue1+row.revenue2,keep=row.revenue1*k1+row.revenue2*k2;cb+=pay+keep;ca+=pay;cum+=keep;return {year:row.year,saving:keep,pay,cumulative:cum,before:cb,after:ca};});
+  const y1=cumulative[0]??{saving:0,pay:0},before=y1.pay+y1.saving,after=y1.pay,pct=x=>Number((x*100).toFixed(1))+'%';
+  const parts=product==='solar'?'ส่วนลด PPA '+pct(disc):product==='battery'?pct(1-share)+' ของผลประหยัดแบต':'ส่วนลด PPA '+pct(disc)+' + '+pct(1-share)+' ของผลประหยัดแบต';
+  return {kind:'raw',before,after,saving:y1.saving,beforeLabel:'ไม่ติดตั้ง',afterLabel:'ติดตั้ง',beforeTitle:'ไม่ติดตั้ง: จ่ายค่าไฟส่วนนี้ให้การไฟฟ้า',afterTitle:'ติดตั้ง: จ่ายให้ กฟผ. แทน',
+   source:product==='solar'?'ส่วนลดค่าไฟ PPA':product==='battery'?'ส่วนแบ่งผลประหยัดจากแบต':'ส่วนลด PPA + ส่วนแบ่งผลประหยัดแบต',
+   factsBefore:[['ค่าไฟส่วนที่ระบบช่วยลด',fmt(before)+' บาท/ปี'],['ลูกค้าได้',parts],['ประหยัดปีแรก',fmt(y1.saving)+' บาท']],
+   factsAfter:[['จ่ายให้ กฟผ. (รายได้ กฟผ. ปีแรก)',fmt(after)+' บาท/ปี'],['ลูกค้าได้',parts],['ประหยัดปีแรก',fmt(y1.saving)+' บาท']],
+   cumulative,life};}
+ if(product!=='solar'){const typed=(s.customer_saving_y1??0)>0,qty=fmt(c.peakKwhDay)+' kWh / วัน';
+  return {kind:'shift',before:c.costBeforeYear,after:c.costAfterYear,saving:c.savingYear,beforeLabel:'Peak',afterLabel:typed?'หลังติดตั้ง':'Off-peak',beforeTitle:'ค่าไฟก่อนย้ายช่วง (Peak)',afterTitle:typed?'ค่าไฟหลังติดตั้ง':'ค่าไฟหลังย้ายช่วง (Off-peak)',
+   source:typed?'ผลประหยัดของลูกค้าที่กรอกไว้':'ย้ายการใช้ไฟจาก Peak ไป Off-peak',
+   factsBefore:[['พลังงานต่อวัน',qty],['ค่าไฟ Peak',fmt(c.peakRate,4)+' บาท/kWh'],['ประหยัดต่อปี',fmt(c.savingYear)+' บาท']],
+   factsAfter:typed?[['ผลประหยัดของลูกค้าที่กรอกไว้',fmt(c.savingYear)+' บาท/ปี'],['คิดเป็น',fmt(c.costBeforeYear?c.savingYear/c.costBeforeYear*100:0,1)+'% ของค่าไฟ Peak'],['ประหยัดต่อปี',fmt(c.savingYear)+' บาท']]:[['พลังงานต่อวัน',qty],['ค่าไฟ Off-peak',fmt(c.offRate,4)+' บาท/kWh'],['ประหยัดต่อปี',fmt(c.savingYear)+' บาท']],
+   cumulative:flat(c.costBeforeYear,c.costAfterYear),life};}
+ const energy=s.energy_y1_kwh??0,grid=s.peak_rate??4.1839,ppa=s.ppa_rate??(energy?s.revenue_y1/energy:0),before=energy*grid,after=energy*ppa,saving=before-after,qty=fmt(energy)+' kWh / ปี';
+ return {kind:'ppa',before,after,saving,beforeLabel:'ไฟกริด',afterLabel:'ไฟ PPA',beforeTitle:'ถ้าซื้อไฟจากกริด',afterTitle:'จ่ายค่าไฟตามสัญญา PPA',source:'ซื้อไฟโซลาร์ราคา PPA แทนไฟกริด',
+  factsBefore:[['พลังงานโซลาร์ต่อปี',qty],['ค่าไฟกริด',fmt(grid,4)+' บาท/kWh'],['ประหยัดต่อปี',fmt(saving)+' บาท']],
+  factsAfter:[['พลังงานโซลาร์ต่อปี',qty],['ราคา PPA',fmt(ppa,4)+' บาท/kWh'],['ประหยัดต่อปี',fmt(saving)+' บาท']],
+  cumulative:flat(before,after),life};}
+export function savings(r,mode='annual',product=false,height=200,width){
+ const c=customerSavings(r,product),w=width??280,h=height,L=37,R=14,T=25,B=32;
  if(mode==='cumulative'){
   // Gap chart: cumulative bill without the system vs with it; the shaded wedge between them is the saving.
-  const nice=v=>{const p=Math.pow(10,Math.floor(Math.log10(v))),f=v/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;};const W=w,L2=46,R2=22,rows=[{year:0,before:0,after:0,cumulative:0},...c.cumulative],end=rows.at(-1),yStep=nice(Math.max(.1,end.before/1e6*1.08)/4),hi=yStep*4,x=t=>L2+t/c.life*(W-L2-R2),y=v=>T+(hi-v)/hi*(h-T-B),st=(W-L2-R2)/c.life;
+  const nice=v=>{const p=Math.pow(10,Math.floor(Math.log10(v))),f=v/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;};const W=w,L2=46,R2=22,rows=[{year:0,before:0,after:0,cumulative:0},...c.cumulative],end=rows.at(-1),top=Math.max(.1,end.before/1e6*1.08),yStep=nice(top/4),hi=Math.ceil(top/yStep)*yStep,x=t=>L2+t/c.life*(W-L2-R2),y=v=>T+(hi-v)/hi*(h-T-B),st=(W-L2-R2)/c.life;
   let b=`<defs><linearGradient id="save-gap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${mint}" stop-opacity=".42"/><stop offset="1" stop-color="${mint}" stop-opacity=".08"/></linearGradient></defs>`;
-  for(let i=0;i<5;i++){const v=yStep*i;b+=line(L2,y(v),W-R2,y(v))+txt(L2-7,y(v)+3,fmt(v,yStep<1?1:0),'text-anchor="end"');}
+  for(let i=0;i<=Math.round(hi/yStep);i++){const v=yStep*i;b+=line(L2,y(v),W-R2,y(v))+txt(L2-7,y(v)+3,fmt(v,yStep<1?1:0),'text-anchor="end"');}
   const xStep=c.life<=6?1:c.life<=12?2:c.life<=30?5:10,ticks=[...new Set([...Array.from({length:Math.floor(c.life/xStep)+1},(_,i)=>i*xStep),c.life])].filter((t,i,a)=>t===c.life||c.life-t>=xStep*.6);ticks.forEach(t=>b+=txt(x(t),h-12,t,'text-anchor="middle"'));
   const P=k=>rows.map(v=>`${n(x(v.year))},${n(y(v[k]/1e6))}`);
   b+=`<polygon class="gap" points="${[...P('before'),...P('after').reverse()].join(' ')}" fill="url(#save-gap)"/>`;
@@ -49,7 +75,7 @@ export function savings(r,mode='annual',isSolar=false,height=200,width){
  const vals=[c.before,c.after],peak=Math.max(...vals,1)/1e6*1.12,mag=Math.pow(10,Math.floor(Math.log10(peak/4))),f=peak/4/mag,stepM=(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*mag,ticks=Math.ceil(peak/stepM),max=ticks*stepM*1e6,dec=Number.isInteger(+stepM.toFixed(6))?0:Number.isInteger(+(stepM*10).toFixed(6))?1:2,y=v=>T+(1-v/max)*(h-T-B),gap=Math.min(150,(w-L-R)/2.4),mid=L+(w-L-R)/2;let b='';for(let i=0;i<=ticks;i++){const v=stepM*i;b+=line(L,y(v*1e6),w-R,y(v*1e6))+txt(L-7,y(v*1e6)+3,v===0?'0':fmt(v,dec),'text-anchor="end" style="font-size:9px"');}
  vals.forEach((v,i)=>{const x=mid+(i?gap/2:-gap/2);b+=`<rect class="hit" data-pick="${i}" x="${x-50}" y="${T}" width="100" height="${h-T-B}" fill="transparent"/><rect data-pick="${i}" class="bar" x="${x-24}" y="${y(v)}" width="48" height="${Math.max(1,h-B-y(v))}" rx="12" fill="${i?mint:peach}" opacity=".9"><title>${i?c.afterTitle:c.beforeTitle}: ${fmt(v)} บาท/ปี</title></rect>`+txt(x,y(v)-8,fmt(v/1e6,2),'text-anchor="middle" class="value" style="font-size:11px"')+txt(x,h-12,i?c.afterLabel:c.beforeLabel,'text-anchor="middle"');});
  const top=y(c.before),bot=y(c.after),ax=mid+gap/2+40;if(c.saving>0&&ax<w-R-10)b+=line(ax,top,ax,bot,'#bdddd4aa','stroke-dasharray="3 3"')+txt(ax+6,(top+bot)/2+3,'ประหยัด '+fmt(c.saving/1e6,2)+' ลบ./ปี','style="font-size:9px;fill:#bdddd4"');
- return svg(w,h,c.kind==='ppa'?'ค่าไฟจากกริดเทียบกับค่าไฟตามสัญญา PPA':'ค่าไฟก่อนและหลังย้ายช่วงการใช้พลังงาน',b+txt(L,12,'ล้านบาท / ปี','class="axis-label"'));
+ return svg(w,h,c.kind==='ppa'?'ค่าไฟจากกริดเทียบกับค่าไฟตามสัญญา PPA':c.kind==='raw'?'ค่าไฟส่วนที่ระบบช่วยลด เทียบกับเงินที่จ่ายให้ กฟผ.':'ค่าไฟก่อนและหลังย้ายช่วงการใช้พลังงาน',b+txt(L,12,'ล้านบาท / ปี','class="axis-label"'));
 }
 // One row per assumption, largest NPV swing first (shared with the click-for-details panel).
 export function sensitivityItems(r,range=.2){const s=r.scenario,base=r.npv;return [['รายได้ปีแรก','revenue_y1'],['เงินลงทุน','initial_investment'],['อัตราคิดลด','discount_rate'],['ค่า O&M','om_y1'],['มูลค่าซาก','salvage_value']].map(([name,key])=>{const vary=f=>key==='revenue_y1'?{...s,revenue_y1:s.revenue_y1*f,revenue2_y1:(s.revenue2_y1??0)*f}:{...s,[key]:s[key]*f};return {name,key,low:(computeScenario(vary(1-range)).npv-base)/1e6,high:(computeScenario(vary(1+range)).npv-base)/1e6};}).sort((a,b)=>Math.abs(b.high-b.low)-Math.abs(a.high-a.low));}
