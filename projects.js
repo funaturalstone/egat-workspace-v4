@@ -1,5 +1,7 @@
 import {DEMO_SCENARIOS} from './domain/demoData.js';
 import {bessScenario} from './domain/bess.js';
+import {derive} from './domain/inputs.js';
+import {sampleRaw,SAMPLE_ID,SAMPLE_NAME} from './domain/khunTon.js';
 const sources={solar:'demo-solar',hybrid:'demo-hybrid',battery:'demo-bess'};
 export const productIds=Object.keys(sources);
 // Keys added after launch: older saved projects may not have them, the engine treats missing as 0
@@ -11,6 +13,11 @@ export function freshWorkspace(){
  const projects=productIds.flatMap(product=>Array.from({length:product==='solar'?4:2},(_,i)=>({id:uid(),product,name:`ลูกค้าคนที่ ${i+1}`,scenario:template(product,product==='battery'&&i===1?'max':'min')})));
  return {version:1,selected:'solar',projects,active:Object.fromEntries(productIds.map(p=>[p,projects.find(s=>s.product===p).id]))};
 }
+// Khun Ton (real factory, checked against the Excel file): one raw-input project per product
+export function sampleScenario(product){const raw=sampleRaw(product),d=derive(product,raw);return {...template(product),...d.fields,input_mode:'raw',raw,sample:SAMPLE_ID,decision_override:'auto',note:'ข้อมูลจริงของคุณต้น · ตรวจตรงกับไฟล์ Excel แล้ว'};}
+// Khun Ton is not part of a new workspace: his projects are stored only for the accounts that should have them
+// (rows in client_projects, built with sampleProjects below).
+export const sampleProjects=()=>productIds.map(product=>({id:uid(),product,name:SAMPLE_NAME,scenario:sampleScenario(product)}));
 export const activeProject=(state,product=state.selected)=>state.projects.find(p=>p.product===product&&p.id===state.active[product])??null;
 export function addProject(state,product,name,copy=false){const base=copy?activeProject(state,product)?.scenario:null;const p={id:uid(),product,name:name.trim(),scenario:{...(base??template(product)),decision_override:'auto'}};if(!p.name||!productIds.includes(product))throw Error('Invalid project');state.projects.push(p);state.active[product]=p.id;state.selected=product;return p;}
 export function removeProject(state,id){const index=state.projects.findIndex(p=>p.id===id);if(index<0)return null;const [project]=state.projects.splice(index,1);if(state.active[project.product]===id)state.active[project.product]=state.projects.find(p=>p.product===project.product)?.id??null;return {project,index};}

@@ -235,7 +235,7 @@ export function mountProductScene(container, product = 'solar', options = {}) {
   const particles = routes.map(() => ball(model,.065,[0,0,0],m.light));
 
   const media = matchMedia('(prefers-reduced-motion: reduce)');
-  let motion = false, dragging = false, rotation = -.10, targetRotation = -.10;
+  let motion = false, dragging = false, moved = false, swayT = 0, rotation = -.10, targetRotation = -.10;
   let rendered = false, compiled = false, startX = 0, startRotation = 0, visible = true, disposed = false, time = 0, raf = 0, last = performance.now();
   const events = [];
   function listen(target,event,handler) { target.addEventListener(event,handler); events.push(() => target.removeEventListener(event,handler)); }
@@ -299,9 +299,12 @@ export function mountProductScene(container, product = 'solar', options = {}) {
   }
   const observer = new ResizeObserver(resize); observer.observe(container); resize();
   const visibility = new IntersectionObserver(([entry]) => {visible=entry.isIntersecting;}); visibility.observe(container);
-  listen(container,'pointerdown',e=>{if(e.button!==0)return;dragging=true;options.sway=false;startX=e.clientX;startRotation=targetRotation;container.setPointerCapture(e.pointerId);});
-  listen(container,'pointermove',e=>{if(dragging)targetRotation=startRotation+(e.clientX-startX)*.006;});
-  for (const event of ['pointerup','pointercancel','lostpointercapture']) listen(container,event,()=>{dragging=false;});
+  listen(container,'pointerdown',e=>{if(e.button!==0)return;dragging=true;moved=false;if(!options.springBack)options.sway=false;startX=e.clientX;startRotation=targetRotation;container.setPointerCapture(e.pointerId);});
+  listen(container,'pointermove',e=>{if(!dragging)return;if(Math.abs(e.clientX-startX)>4)moved=true;targetRotation=startRotation+(e.clientX-startX)*.006;});
+  // springBack: when the drag ends the model glides back to its front view (and, if spinning, starts its sway again from there)
+  for (const event of ['pointerup','pointercancel','lostpointercapture']) listen(container,event,()=>{if(!dragging)return;dragging=false;if(options.springBack){targetRotation=-.10;swayT=0;}});
+  // a drag is not a click: keep it from selecting the card underneath
+  listen(container,'click',e=>{if(moved){e.stopPropagation();e.preventDefault();moved=false;}});
   // Keyboard access is exposed on the viewport, independently of selection.
   listen(container,'keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();options.sway=false;targetRotation+=(e.key==='ArrowLeft'?-.15:.15);}if(e.key==='Home')targetRotation=-.10;});
   function frame(now) {
@@ -310,7 +313,7 @@ export function mountProductScene(container, product = 'solar', options = {}) {
     if(visible&&!document.hidden) {
       if(motion&&!media.matches&&!dragging)time+=dt;
       // Idle sway shows the model is real 3D; dragging or the keyboard still take over.
-      if(options.sway&&motion&&!media.matches&&!dragging)targetRotation=-.10+Math.sin(time*.375+(options.phase??0))*.32;
+      if(options.sway&&motion&&!media.matches&&!dragging){if(options.springBack){swayT+=dt;targetRotation=-.10+Math.sin(swayT*.375)*.32;}else targetRotation=-.10+Math.sin(time*.375+(options.phase??0))*.32;}
       rotation+=(targetRotation-rotation)*(media.matches?1:1-Math.exp(-10*dt));
       model.rotation.y=rotation;
       cloud.position.y=3.48+(motion&&!media.matches?Math.sin(time*.58)*.035:0);
@@ -332,6 +335,8 @@ export function mountProductScene(container, product = 'solar', options = {}) {
     ready,
     setMotion(on){motion=Boolean(on);},
     setFocus(keys=[]){focusKeys=[...keys];},
+    // Turn the idle sway on (selected card) or off (others: still, front view, drag to look around).
+    setSpin(on){on=Boolean(on);if(on===Boolean(options.sway))return;options.sway=on;swayT=0;if(!dragging)targetRotation=-.10;},
     // Glide the camera to a new zoom (smaller = closer) and look-at height.
     setView({zoom,lookY,scale}={}){if(zoom!=null)viewTarget.zoom=zoom;if(lookY!=null)viewTarget.lookY=lookY;if(scale!=null)viewTarget.scale=scale;},
     reset(){targetRotation=-.10;options.sway=Boolean(options.swayInitial??options.sway);},

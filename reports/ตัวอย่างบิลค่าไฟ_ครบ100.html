@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ตัวอย่างบิลค่าไฟ</title>
+<style>
+:root{--ink:#1d2421;--muted:#5d6763;--line:#cfd8d4;--g:#123d2e;--hl:#fff3b0;--badge:#c2410c}
+*{box-sizing:border-box}
+body{margin:0;background:#eef2f0;font-family:"Sukhumvit Set","Thonburi","Noto Sans Thai",sans-serif;color:var(--ink);padding:28px 30px}
+h1{margin:0 0 4px;font-size:26px;color:var(--g)}
+.sub{margin:0 0 18px;color:var(--muted);font-size:15px}
+.wrap{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.bill{position:relative;background:#fff;border:1px solid var(--line);border-radius:10px;padding:18px 20px;overflow:hidden;box-shadow:0 2px 6px #0001}
+.bill::after{content:"ตัวอย่างสมมติ · ไม่ใช่บิลจริง";position:absolute;top:45%;left:-10%;width:120%;text-align:center;transform:rotate(-24deg);font-size:46px;font-weight:700;color:#c2410c14;pointer-events:none}
+.top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--g);padding-bottom:8px;margin-bottom:8px}
+.top b{font-size:19px}.tag{font-size:13px;font-weight:700;padding:3px 10px;border-radius:12px;color:#fff;background:var(--g)}
+.tag.nm{background:#6b7a73}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+td{padding:5px 6px;border-bottom:1px dashed #e2e8e5;vertical-align:top}
+td.v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.k td{background:var(--hl)}
+tr.sec td{font-weight:700;color:var(--g);border-bottom:1px solid var(--line);padding-top:10px}
+tr.tot td{font-weight:700;font-size:16px;border-top:2px solid var(--g);border-bottom:none}
+.n{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border-radius:50%;background:var(--badge);color:#fff;font-size:12px;font-weight:700;margin-right:6px;flex:none}
+.legend{margin-top:20px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 18px;display:grid;grid-template-columns:1fr 1fr;gap:6px 26px;font-size:14.5px}
+.legend div{display:flex;align-items:flex-start}
+.foot{margin-top:10px;color:var(--muted);font-size:12.5px}
+.miss{color:#9a3412;font-weight:700}
+</style></head><body>
+<h1>บิลค่าไฟที่ "ข้อมูลครบ 100%" ต้องเห็นอะไรบ้าง</h1>
+<p class="sub">ตัวอย่างสมมติสำหรับฝึกอ่าน ตัวเลขคำนวณจากอัตรา กฟภ. ปัจจุบัน (ประเภท 3 แรงดัน 22–33 kV, Ft 0.1623) · ช่องสีเหลือง = ช่องที่แพลตฟอร์มต้องใช้</p>
+<div class="wrap">
+
+<div class="bill">
+<div class="top"><div><b>ใบแจ้งค่าไฟฟ้า</b><br><span style="font-size:13px;color:var(--muted)">ประจำเดือน 09/2569 · อ่านหน่วย 30/09/2569</span></div><span class="tag">มิเตอร์ TOU</span></div>
+<table>
+<tr class="k"><td><span class="n">1</span>สถานที่ใช้ไฟ</td><td class="v">บจก. ตัวอย่าง · 99 ม.1 ต.ตัวอย่าง จ.ตัวอย่าง</td></tr>
+<tr class="k"><td><span class="n">7</span>หมายเลขผู้ใช้ไฟ / รหัสเครื่องวัด</td><td class="v">0200xxxxxxxx / 2306xxxx</td></tr>
+<tr class="k"><td><span class="n">2</span>ประเภทอัตรา</td><td class="v"><b>3.2.2</b> กิจการขนาดกลาง TOU 22–33 kV</td></tr>
+<tr class="sec"><td colspan="2">การใช้ไฟฟ้า</td></tr>
+<tr class="k"><td><span class="n">3</span>หน่วย On-Peak (จ.–ศ. 09:00–22:00)</td><td class="v">33,000 kWh</td></tr>
+<tr class="k"><td><span class="n">3</span>หน่วย Off-Peak (รวมวันหยุด)</td><td class="v">40,000 kWh</td></tr>
+<tr><td>หน่วยรวม</td><td class="v">73,000 kWh</td></tr>
+<tr class="k"><td><span class="n">4</span>ความต้องการพลังไฟฟ้าสูงสุด (ช่วง On-Peak)</td><td class="v">180 kW</td></tr>
+<tr><td>ความต้องการพลังไฟฟ้ารีแอคทีฟ</td><td class="v">130 kVAR</td></tr>
+<tr class="sec"><td colspan="2">ค่าไฟฟ้า (บาท)</td></tr>
+<tr><td>ค่าพลังงาน On-Peak 33,000 × 4.1839</td><td class="v">138,068.70</td></tr>
+<tr><td>ค่าพลังงาน Off-Peak 40,000 × 2.6037</td><td class="v">104,148.00</td></tr>
+<tr class="k"><td><span class="n">5</span>ค่าความต้องการพลังไฟฟ้า 180 × 132.93</td><td class="v">23,927.40</td></tr>
+<tr><td>ค่าบริการ</td><td class="v">312.24</td></tr>
+<tr class="k"><td><span class="n">5</span>ค่าเพาเวอร์แฟคเตอร์ (ส่วนเกิน 18 kVAR × 56.07)</td><td class="v">1,009.26</td></tr>
+<tr class="k"><td><span class="n">6</span>ค่า Ft 73,000 × 0.1623</td><td class="v">11,847.90</td></tr>
+<tr><td>รวมเงินค่าไฟฟ้า</td><td class="v">279,313.50</td></tr>
+<tr><td>ภาษีมูลค่าเพิ่ม 7%</td><td class="v">19,551.95</td></tr>
+<tr class="tot"><td>รวมเงินทั้งสิ้น</td><td class="v">298,865.45</td></tr>
+</table>
+</div>
+
+<div class="bill">
+<div class="top"><div><b>ใบแจ้งค่าไฟฟ้า</b><br><span style="font-size:13px;color:var(--muted)">ประจำเดือน 09/2569 · อ่านหน่วย 30/09/2569</span></div><span class="tag nm">มิเตอร์แบบธรรมดา</span></div>
+<table>
+<tr class="k"><td><span class="n">1</span>สถานที่ใช้ไฟ</td><td class="v">บจก. ตัวอย่าง · 99 ม.1 ต.ตัวอย่าง จ.ตัวอย่าง</td></tr>
+<tr class="k"><td><span class="n">7</span>หมายเลขผู้ใช้ไฟ / รหัสเครื่องวัด</td><td class="v">0200xxxxxxxx / 2306xxxx</td></tr>
+<tr class="k"><td><span class="n">2</span>ประเภทอัตรา</td><td class="v"><b>3.1.2</b> กิจการขนาดกลาง ปกติ 22–33 kV</td></tr>
+<tr class="sec"><td colspan="2">การใช้ไฟฟ้า</td></tr>
+<tr class="k"><td><span class="n">3</span>หน่วยที่ใช้</td><td class="v">73,000 kWh</td></tr>
+<tr><td class="miss" colspan="2">ไม่แยก On-Peak / Off-Peak → ต้องถามเวลาทำงาน (ข้อ 1–4) แทน</td></tr>
+<tr class="k"><td><span class="n">4</span>ความต้องการพลังไฟฟ้าสูงสุด (ทุกช่วงเวลา)</td><td class="v">200 kW</td></tr>
+<tr><td>ความต้องการพลังไฟฟ้ารีแอคทีฟ</td><td class="v">130 kVAR</td></tr>
+<tr class="sec"><td colspan="2">ค่าไฟฟ้า (บาท)</td></tr>
+<tr><td>ค่าพลังงาน 73,000 × 3.1471</td><td class="v">229,738.30</td></tr>
+<tr class="k"><td><span class="n">5</span>ค่าความต้องการพลังไฟฟ้า 200 × 196.26</td><td class="v">39,252.00</td></tr>
+<tr><td>ค่าบริการ</td><td class="v">312.24</td></tr>
+<tr class="k"><td><span class="n">5</span>ค่าเพาเวอร์แฟคเตอร์ (ส่วนเกิน 18 kVAR × 56.07)</td><td class="v">1,009.26</td></tr>
+<tr class="k"><td><span class="n">6</span>ค่า Ft 73,000 × 0.1623</td><td class="v">11,847.90</td></tr>
+<tr><td>รวมเงินค่าไฟฟ้า</td><td class="v">282,159.70</td></tr>
+<tr><td>ภาษีมูลค่าเพิ่ม 7%</td><td class="v">19,751.18</td></tr>
+<tr class="tot"><td>รวมเงินทั้งสิ้น</td><td class="v">301,910.88</td></tr>
+</table>
+</div>
+</div>
+
+<div class="legend">
+<div><span class="n">1</span>ที่อยู่ → ไฟที่ผลิตได้ (PVGIS) และพื้นที่หลังคา (ดาวเทียม)</div>
+<div><span class="n">2</span>ประเภทอัตรา → ชนิดมิเตอร์ + ระดับแรงดัน → ค่าไฟทุกช่อง</div>
+<div><span class="n">3</span>หน่วยไฟ (TOU แยก On/Off-Peak) → ไฟกลางวันและสัดส่วนที่ใช้ได้</div>
+<div><span class="n">4</span>Peak demand (kW) → ขนาดแบตและค่า Demand ที่ลดได้</div>
+<div><span class="n">5</span>ค่า Demand และค่าเพาเวอร์แฟคเตอร์ → ตรวจยอดบิล</div>
+<div><span class="n">6</span>ค่า Ft และรอบเดือน → ค่า Ft ที่ใช้คำนวณ</div>
+<div><span class="n">7</span>หมายเลขผู้ใช้ไฟ + รหัสเครื่องวัด → ขอไฟล์ 15 นาทีจาก กฟภ.</div>
+<div style="color:var(--muted)">ค่าเพาเวอร์แฟคเตอร์คิดเมื่อ kVAR เกิน 61.97% ของ kW สูงสุด</div>
+</div>
+<p class="foot">ตัวอย่างสมมติ ทำขึ้นเพื่อใช้อธิบายว่าต้องขอเอกสารส่วนไหนจากลูกค้า ไม่ใช่บิลจริงของผู้ใช้ไฟรายใด และไม่ใช่แบบฟอร์มทางการของ กฟภ.</p>
+</body></html>

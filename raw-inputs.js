@@ -2,6 +2,8 @@
 // The formulas live in domain/inputs.js; this file only draws the form and keeps the project's scenario in step.
 import { GROUPS, SELECTORS, inputStatus, derive, isPercent, prefillSource, defaultRaw } from './domain/inputs.js';
 import { fmt } from './charts.js';
+import { NOTES } from './domain/khunTonData.js';
+import { isSample } from './domain/khunTon.js';
 
 const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const MODEL_FIELDS = [
@@ -33,6 +35,15 @@ function badge(row) {
   return ['ok', '✓'];
 }
 
+// Khun Ton sample: the 5-part note behind each input (type · what it is · where from · why this value · how the formula uses it)
+const NOTE_PARTS = ['ตัวเลขนี้คืออะไร', 'เอามาจากไหน', 'ทำไมเลือกค่านี้', 'ใช้ในสูตรยังไง'];
+function noteHtml(s, key) {
+  const n = isSample(s) ? NOTES[key] : null;
+  if (!n) return '';
+  const [kind, ...parts] = n;
+  return `<details class="raw-note"><summary>ที่มาของตัวเลขนี้ · <b>${esc(kind)}</b></summary><dl>${parts.map((t, i) => `<dt>${NOTE_PARTS[i]}</dt><dd>${esc(t).replace(/\n/g, '<br>')}</dd>`).join('')}</dl></details>`;
+}
+
 export function rawFormHtml(product, s, title) {
   const raw = rawOf(s), st = inputStatus(product, raw);
   const selectors = SELECTORS[product].map(x => `<label class="field">${x.label}<span class="input-wrap"><select data-sel="${x.key}" aria-label="${x.label}">${x.options.map(([v, t]) => `<option value="${v}"${raw.sel[x.key] === v ? ' selected' : ''}>${v} = ${t}</option>`).join('')}</select></span></label>`).join('');
@@ -43,17 +54,17 @@ export function rawFormHtml(product, s, title) {
       const i = row.input, [cls, text] = badge(row), src = row.prefilled ? prefillSource(i) : null;
       return `<label class="field raw-field ${cls}" data-raw-field="${i.key}"><span class="raw-label">${esc(i.label)} <b class="raw-badge" data-badge="${i.key}">${text}</b></span>`
         + `<span class="input-wrap"><input aria-label="${esc(i.label)}" data-raw="${i.key}" type="number" step="any" value="${inputValue(row.value, i.unit)}"><span>${esc(i.unit)}</span></span>`
-        + `<small class="raw-who"><b>${esc(i.who)}</b> · ${esc(i.doc)}${src ? ` · ค่าตั้งต้นจาก ${esc(src)}` : ''}</small></label>`;
+        + `<small class="raw-who"><b>${esc(i.who)}</b> · ${esc(i.doc)}${src ? ` · ค่าตั้งต้นจาก ${esc(src)}` : ''}</small>${noteHtml(s, i.key)}</label>`;
     }).join('')}</div></div>`;
   }).join('');
-  return `<section class="card input-card raw-card"><div class="raw-head"><div><h3>${title}</h3><p>กรอกข้อมูลดิบ แบ่งตามผู้ให้ข้อมูล · สูตรเดียวกับไฟล์ EGAT_Platform_Input_แยกตามผลิตภัณฑ์.xlsx</p></div><span class="raw-status" id="raw-status"></span></div>`
+  return `<section class="card input-card raw-card"><div class="raw-head"><div><h3>${title}</h3></div><span class="raw-status" id="raw-status"></span></div>`
     + `<div class="form-grid raw-selectors">${selectors}</div>${groups}</section>`
-    + `<section class="card raw-calc"><h3>ค่าที่คำนวณจาก input (สูตร)</h3><div id="raw-derived"></div></section>`
+    + `<section class="card raw-calc"><h3>ค่าที่คำนวณจาก input</h3><div id="raw-derived"></div></section>`
     + `<section class="card raw-calc"><h3>ตัวเลขที่ส่งเข้าแบบจำลองการเงิน</h3><div id="raw-model"></div></section>`;
 }
 
 function tables(product, res) {
-  const derived = `<table class="raw-table"><thead><tr><th>ค่า</th><th>ผล</th><th>หน่วย</th><th>สูตร</th></tr></thead><tbody>${res.steps.map(x => `<tr><td>${x.label}</td><td class="num">${res.complete ? show(x.value, x.unit) : '—'}</td><td>${x.unit}</td><td class="how">${x.how}</td></tr>`).join('')}</tbody></table>`;
+  const derived = `<table class="raw-table"><thead><tr><th>ค่า</th><th>ผล</th><th>หน่วย</th></tr></thead><tbody>${res.steps.map(x => `<tr><td>${x.label}</td><td class="num">${res.complete ? show(x.value, x.unit) : '—'}</td><td>${x.unit}</td></tr>`).join('')}</tbody></table>`;
   const f = res.fields;
   const keys = MODEL_FIELDS.filter(([k]) => f[k] !== undefined && !(product !== 'hybrid' && (k.startsWith('revenue2') || k.startsWith('replacement2')))
     && !(product === 'solar' && k === 'customer_saving_y1') && !(k === 'revenue_growth_late' && !f.growth_switch_year)
@@ -76,7 +87,7 @@ export function bindRaw(root, { product, get, set, rerender, onUpdate }) {
       el.querySelector('.raw-badge').textContent = text;
     }
     const status = root.querySelector('#raw-status');
-    status.textContent = res.complete ? '✅ ครบ' : `ยังขาด ${res.missing.length} ช่อง`;
+    status.textContent = res.complete ? '' : `ยังขาด ${res.missing.length} ช่อง`;
     status.classList.toggle('done', res.complete);
     const t = tables(product, res);
     root.querySelector('#raw-derived').innerHTML = t.derived;

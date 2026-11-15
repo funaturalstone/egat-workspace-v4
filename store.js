@@ -74,7 +74,7 @@ async function cloudWorkspace(user) {
     mode: 'cloud', state,
     save(s) { queued = structuredClone(s); status('กำลังบันทึก…'); clearTimeout(timer); timer = setTimeout(flush, 600); },
   };
-  if (fresh) ws.save(state); // first sign-in: start from the sample clients and store them for this account
+  if (fresh) ws.save(state); // first sign-in: store the starting workspace for this account
   else status(dropped ? `● โหลดแล้ว · ข้าม ${dropped} รายการที่ข้อมูลไม่ถูกต้อง` : '● บันทึกบนคลาวด์แล้ว');
   return ws;
 }
