@@ -99,7 +99,7 @@ test('LCOE = PV of all costs ÷ PV of energy', () => {
     const res = computeScenario(s);
     const pv = (v, t) => v / (1 + s.discount_rate) ** t;
     const cost = res.cashflows.reduce((a, row) => a + pv(row.year === 0 ? s.initial_investment : row.om_cost + row.other_cost + row.replacement, row.year), 0);
-    const energy = res.cashflows.reduce((a, row) => a + (row.year === 0 ? 0 : pv(s.energy_y1_kwh, row.year)), 0);
+    const energy = res.cashflows.reduce((a, row) => a + (row.year === 0 ? 0 : pv(s.energy_y1_kwh * (1 - (s.energy_degradation ?? 0)) ** (row.year - 1), row.year)), 0);
     close(res.lcoe, cost / energy, 1e-12, name + ' LCOE');
   }
 });
@@ -173,4 +173,17 @@ test('new cash-flow features follow their formulas', () => {
   assert.ok(Math.abs(res.equity.rows[10].balance) < 1e-6, 'loan repaid after 10 years');
   assert.equal(res.equity.rows[0].net_cf, -4e6, 'equity pays investment minus loan');
   assert.equal(computeScenario(base).equity, null, 'no loan → no equity view');
+});
+
+test('LCOE counts less energy each year as panels / battery degrade (Khun Ton)', async () => {
+  const { sampleScenario } = await import('./projects.js');
+  const want = { solar: [0.007, 2.9128], hybrid: [0.007, 4.7818], battery: [0.025, 10.6943] };
+  for (const [p, [deg, lcoe]] of Object.entries(want)) {
+    const s = sampleScenario(p), res = computeScenario(s);
+    close(s.energy_degradation, deg, 1e-12, p + ' degradation from the inputs');
+    close(Math.round(res.lcoe * 1e4) / 1e4, lcoe, 1e-9, p + ' LCOE');
+    // a project saved before the field existed gives the same LCOE from its raw inputs
+    const { energy_degradation, ...old } = s;
+    close(computeScenario(old).lcoe, res.lcoe, 1e-12, p + ' older saved project');
+  }
 });

@@ -15,10 +15,10 @@ document.querySelectorAll('[data-reveal]').forEach(el => (io ? io.observe(el) : 
 const STAGE = {
   solar: { icon: '☀', category: 'SOLAR GENERATION', title: 'Solar<span>-PPA</span>', desc: 'ผลิตไฟจากแสงอาทิตย์บนพื้นที่ของลูกค้า<br>ขายไฟตามสัญญา PPA ในราคาต่ำกว่าค่าไฟกริด<br>ลูกค้าเริ่มประหยัดได้โดยไม่ต้องลงทุนเอง', detail: 'ผลิตเอง · จ่ายน้อยลง', note: 'พลังงานสะอาด<br><strong>จากหลังคาคุณ</strong>', how: 'กฟผ. ลงทุนติดแผง · ลูกค้าซื้อไฟถูกกว่ากริด',
     name: 'Solar PPA', fit: ['ใช้ไฟกลางวันเยอะ', 'มีหลังคาว่าง', 'ไม่อยากลงทุนเอง'] },
-  hybrid: { icon: '◈', category: 'GENERATION + STORAGE', title: 'Solar<span>+BESS</span>', desc: 'ผลิตไฟจากแสงอาทิตย์ในตอนกลางวัน<br>เก็บส่วนที่เหลือไว้ใช้ช่วง peak<br>ใช้พลังงานสะอาดได้นานขึ้นในทุกวัน', detail: 'ผลิต · เก็บ · ใช้', note: 'แดดวันนี้<br><strong>ใช้ได้ถึงค่ำ</strong>', how: 'กลางวันใช้ไฟแดด · ช่วง peak ดึงไฟจากแบต',
-    name: 'Solar + Battery', fit: ['ใช้ไฟต่อถึงเย็น', 'มีหลังคาว่าง', 'ค่า Demand สูง'] },
-  battery: { icon: 'ϟ', category: 'BATTERY ENERGY STORAGE', title: 'Battery<span>-BESS</span>', desc: 'เก็บพลังงานในช่วง off-peak<br>พร้อมใช้ในช่วง peak ช่วยลดต้นทุนค่าไฟ<br>ให้ทุกหน่วยพลังงานคุ้มค่ายิ่งขึ้น', detail: 'เก็บให้พร้อม · ใช้ให้คุ้ม', note: 'พลังงานดี ๆ<br><strong>ที่เก็บไว้ได้</strong>', how: 'ชาร์จช่วงไฟถูก · จ่ายช่วง peak ลดค่า Demand',
-    name: 'Battery', fit: ['ค่า Demand สูง', 'ไฟพุ่งช่วง peak ชัด'] },
+  hybrid: { icon: '◈', category: 'GENERATION + STORAGE', title: 'Solar<span>+BESS PPA</span>', desc: 'ผลิตไฟจากแสงอาทิตย์ในตอนกลางวัน<br>เก็บส่วนที่เหลือไว้ใช้ช่วง peak<br>ใช้พลังงานสะอาดได้นานขึ้นในทุกวัน', detail: 'ผลิต · เก็บ · ใช้', note: 'แดดวันนี้<br><strong>ใช้ได้ถึงค่ำ</strong>', how: 'กลางวันใช้ไฟแดด · ช่วง peak ดึงไฟจากแบต',
+    name: 'Solar + BESS PPA', fit: ['ใช้ไฟต่อถึงเย็น', 'มีหลังคาว่าง', 'ค่า Demand สูง'] },
+  battery: { icon: 'ϟ', category: 'BATTERY ENERGY STORAGE', title: 'BESS<span>-PPA</span>', desc: 'เก็บพลังงานในช่วง off-peak<br>พร้อมใช้ในช่วง peak ช่วยลดต้นทุนค่าไฟ<br>ให้ทุกหน่วยพลังงานคุ้มค่ายิ่งขึ้น', detail: 'เก็บให้พร้อม · ใช้ให้คุ้ม', note: 'พลังงานดี ๆ<br><strong>ที่เก็บไว้ได้</strong>', how: 'ชาร์จช่วงไฟถูก · จ่ายช่วง peak ลดค่า Demand',
+    name: 'BESS PPA', fit: ['ค่า Demand สูง', 'ไฟพุ่งช่วง peak ชัด'] },
 };
 const stage = document.getElementById('hero-stage'), view = document.getElementById('stage-view');
 const $s = id => document.getElementById(id);

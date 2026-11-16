@@ -104,7 +104,10 @@ export function computeScenario(s) {
   const costs = rows.map((r) =>
     r.year === 0 ? s.initial_investment : r.om_cost + r.other_cost + r.replacement
   );
-  const energy = rows.map((r) => (r.year === 0 ? 0 : s.energy_y1_kwh));
+  // พลังงานลดลงทุกปีตามการเสื่อมของแผง (Solar, Solar + Battery) หรือแบต (Battery) เหมือนที่กระแสเงินสดหักไว้
+  // energy_degradation มาจากหน้ากรอกข้อมูลดิบ · โครงการที่บันทึกก่อนมีช่องนี้ใช้ค่าแผงเสื่อม / แบตเสื่อมที่กรอกไว้ · โครงการพิมพ์ตัวเลขเองใช้ 0
+  const energyDeg = s.energy_degradation ?? (s.input_mode === "raw" ? (s.raw?.values?.deg ?? s.raw?.values?.bdeg ?? 0) : 0);
+  const energy = rows.map((r) => (r.year === 0 ? 0 : s.energy_y1_kwh * Math.pow(1 - energyDeg, r.year - 1)));
   const lcoeValue = lcoe(s.discount_rate, costs, energy);
 
   // คำแนะนำจากระบบ (IRR เทียบ hurdle rate)
@@ -150,6 +153,7 @@ export function computeScenario(s) {
       discountedFallsBelowAgain: discPaybackValue != null && rows.some(r => r.year > discPaybackValue && r.discounted_cumulative < 0),
     },
     lcoe: lcoeValue,
+    lcoe_degradation: energyDeg,
     equity,
     recommendation,
     decisionFinal,

@@ -677,3 +677,32 @@ body.welcoming .app-shell,body.dashboard-in .app-shell{will-change:transform,opa
 
 /* tax status on every result */
 .tax-note{margin:10px 2px 0;font-size:11px;color:var(--muted)}.tax-note b,.tax-tag{color:#e8c39e;font-weight:600}
+
+/* ===== motion upgrades: live KPI change, mode switch, notes, chart picks ===== */
+.mode-switch{position:relative}
+.mode-switch button{position:relative;z-index:1;transition:color .3s}
+.mode-pill{position:absolute;top:0;left:0;width:0;height:0;border-radius:7px;background:var(--orange);pointer-events:none;opacity:0;transition:transform .38s cubic-bezier(.3,.9,.3,1),width .38s cubic-bezier(.3,.9,.3,1)}
+.mode-switch.has-pill .mode-pill{opacity:1}
+.mode-switch.has-pill button.active{background:none}
+.raw-note summary::before{content:'▸';display:inline-block;margin-right:6px;transition:transform .24s}
+.raw-note[open] summary::before{transform:rotate(90deg)}
+.chart .bar{stroke:#fff;stroke-opacity:0;transition:opacity .3s,filter .3s,stroke-opacity .3s}
+.chart .bar.picked{stroke-opacity:.6}
+.chart .pt{transition:opacity .24s,r .24s,filter .3s}
+.chart .pt.picked{filter:drop-shadow(0 0 5px #ffffffaa)}
+.chart.has-pick .draw{opacity:.72;transition:opacity .3s}
+.chart .draw{transition:opacity .3s}
+@keyframes kpi-flash{0%{box-shadow:0 0 0 0 #ffb28b00;border-color:#ffb28b00}18%{box-shadow:0 0 0 1px #ffb28bcc,0 0 26px #ffb28b55;border-color:#ffb28b}100%{box-shadow:0 0 0 0 #ffb28b00}}
+@keyframes kpi-bump{0%{transform:translateY(0)}30%{transform:translateY(-3px)}100%{transform:translateY(0)}}
+@keyframes note-row{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:no-preference){
+  .live-results .metric-card.changed{animation:kpi-flash .95s ease-out}
+  .live-results .metric-card.changed .metric-value{animation:kpi-bump .5s cubic-bezier(.2,.8,.2,1)}
+  #content.mode-in .mode-switch~*{animation:card-in .52s cubic-bezier(.2,.8,.2,1) both}
+  #content.mode-in .mode-switch~*:nth-child(n+3){animation-delay:.06s}
+  .raw-note{interpolate-size:allow-keywords}
+  .raw-note::details-content{block-size:0;overflow:clip;transition:block-size .36s cubic-bezier(.2,.8,.2,1),content-visibility .36s allow-discrete}
+  .raw-note[open]::details-content{block-size:auto}
+  .raw-note[open] dt,.raw-note[open] dd{animation:note-row .4s cubic-bezier(.2,.8,.2,1) both}
+  .raw-note[open] :nth-child(n+3){animation-delay:.05s}.raw-note[open] :nth-child(n+5){animation-delay:.1s}.raw-note[open] :nth-child(n+7){animation-delay:.15s}.raw-note[open] :nth-child(n+9){animation-delay:.2s}
+}

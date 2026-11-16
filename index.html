@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>EGAT · ลงทุนพลังงาน มองเห็นความคุ้มค่า</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#0c1321">
-<meta name="description" content="แพลตฟอร์มประเมินการลงทุน Solar PPA, Solar + Battery และ Battery ด้วยข้อมูลที่คุณกำหนด">
+<meta name="description" content="แพลตฟอร์มประเมินการลงทุน Solar PPA, Solar + BESS PPA และ BESS PPA ด้วยข้อมูลที่คุณกำหนด">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="landing.css">
@@ -23,7 +23,7 @@
     <div class="hero-head">
       <span class="hero-badge">◆ แพลตฟอร์มประเมินการลงทุนพลังงาน</span>
       <h1>ลงทุนพลังงาน <span>มองเห็นความคุ้มค่า</span></h1>
-      <p class="hero-sub">ประเมิน Battery และ Solar ด้วยข้อมูลที่คุณกำหนด<br>เปรียบเทียบผลตอบแทน ดูจุดคุ้มทุน และวางแผนการลงทุนในที่เดียว</p>
+      <p class="hero-sub">ประเมิน Solar PPA และ BESS PPA ด้วยข้อมูลที่คุณกำหนด<br>เปรียบเทียบผลตอบแทน ดูจุดคุ้มทุน และวางแผนการลงทุนในที่เดียว</p>
       <div class="hero-actions"><a href="/app?demo" class="lbtn solid lg">ทดลองโครงการตัวอย่าง →</a><a href="#platform" class="lbtn ghost lg">ดูผลวิเคราะห์</a></div>
     </div>
     <div class="hero-stage" id="hero-stage" aria-label="โมเดล 3 มิติ ผลิตภัณฑ์พลังงาน">
@@ -35,20 +35,20 @@
       <div class="stage-view" id="stage-view" tabindex="0" role="img" aria-label="ลากหรือกดลูกศรซ้าย/ขวาเพื่อหมุนโมเดล"></div>
       <article class="stage-info" aria-live="polite">
         <div class="stage-category"><span class="stage-icon" id="stage-icon">ϟ</span><span id="stage-category">BATTERY ENERGY STORAGE</span></div>
-        <h2 class="stage-title" id="stage-title">Battery<span>-BESS</span><b>.</b></h2>
+        <h2 class="stage-title" id="stage-title">BESS<span>-PPA</span><b>.</b></h2>
         <p class="stage-desc" id="stage-desc"></p>
         <div class="stage-detail"><span class="stage-dot"></span><span id="stage-detail"></span></div>
         <div class="stage-detail stage-how"><span class="stage-dot"></span><span id="stage-how"></span></div>
         <div class="stage-fit"><span class="stage-fit-label">เหมาะกับลูกค้าที่</span><ul id="stage-fit"></ul></div>
-        <a class="lbtn solid stage-try" id="stage-try" href="/app?demo&amp;product=battery">ลองประเมิน Battery →</a>
+        <a class="lbtn solid stage-try" id="stage-try" href="/app?demo&amp;product=battery">ลองประเมิน BESS PPA →</a>
       </article>
       <div class="stage-note" aria-hidden="true"><span class="stage-note-icon" id="stage-note-icon">ϟ</span><span id="stage-note"></span><span class="stage-spark">✦</span></div>
       <div class="stage-caption"><span></span> พลังงานสะอาด เชื่อมถึงกัน</div>
       <div class="stage-bar">
         <div class="stage-tabs" role="group" aria-label="เลือกผลิตภัณฑ์">
           <button class="stage-tab" type="button" data-stage="solar" aria-pressed="false"><span>☀</span> Solar PPA <i></i></button>
-          <button class="stage-tab" type="button" data-stage="hybrid" aria-pressed="false"><span>◈</span> Solar + Battery <i></i></button>
-          <button class="stage-tab" type="button" data-stage="battery" aria-pressed="true"><span>ϟ</span> Battery <i></i></button>
+          <button class="stage-tab" type="button" data-stage="hybrid" aria-pressed="false"><span>◈</span> Solar + BESS PPA <i></i></button>
+          <button class="stage-tab" type="button" data-stage="battery" aria-pressed="true"><span>ϟ</span> BESS PPA <i></i></button>
         </div>
         <span class="stage-hint">ลากเพื่อหมุนดูโมเดล <span>↔</span></span>
         <button class="stage-reset" id="stage-reset" type="button">↺ <span>มุมมองเริ่มต้น</span></button>
@@ -57,7 +57,7 @@
   </section>
 
   <section class="landing-section" id="solutions">
-    <div class="section-head" data-reveal><span>DESIGNED FOR YOUR DECISION</span><h2>จากสมมติฐาน สู่การตัดสินใจ</h2><p>สำรวจโอกาสของ Solar PPA, Solar + Battery และ Battery</p></div>
+    <div class="section-head" data-reveal><span>DESIGNED FOR YOUR DECISION</span><h2>จากสมมติฐาน สู่การตัดสินใจ</h2><p>สำรวจโอกาสของ Solar PPA, Solar + BESS PPA และ BESS PPA</p></div>
     <div class="feature-grid">
       <article class="feature-card" data-reveal><div class="feature-num">01</div><h3>ปรับสมมติฐาน</h3><p>กำหนดเงินลงทุน รายได้ ค่าใช้จ่าย และอายุโครงการให้สอดคล้องกับงานของคุณ</p></article>
       <article class="feature-card" data-reveal><div class="feature-num">02</div><h3>มองเห็นจุดคุ้มทุน</h3><p>ดู NPV, IRR และปีคืนทุนทั้งแบบปกติและคิดลด พร้อมติดตามในกราฟเดียว</p></article>
@@ -81,7 +81,7 @@
     <div data-reveal><span class="method-kicker">UNDERSTAND THE NUMBERS</span><h2>เข้าใจที่มาของตัวเลข</h2><p>ผลวิเคราะห์คำนวณจากสมมติฐานของแต่ละโครงการลูกค้า คุณสามารถดูตารางรายปีและส่งออกข้อมูลเพื่อตรวจสอบได้</p></div>
     <div class="faq" data-reveal style="--d:1">
       <details><summary>จุดคุ้มทุนคำนวณอย่างไร?</summary><p>ปีที่กระแสเงินสดสะสมแตะศูนย์ครั้งแรก โดยประมาณเศษปีแบบเส้นตรง แบบคิดลดจะปรับกระแสเงินสดด้วยอัตราคิดลดที่กำหนดก่อนสะสม รวมเงินลงทุน ค่าใช้จ่าย ค่าเปลี่ยนอุปกรณ์ และมูลค่าซากตามสมมติฐาน</p></details>
-      <details><summary>ผลประหยัดของ Battery มาจากไหน?</summary><p>คำนวณตามไฟล์ BESS Feasibility Model: peak shaving, tariff management และส่วนลด demand charge จากขนาดแบตเตอรี่ ต้นทุนต่อ kWh และอัตราค่าไฟที่กำหนด ยังไม่รวมการเสื่อมของแบตเตอรี่หรือภาษี</p></details>
+      <details><summary>ผลประหยัดของ BESS PPA มาจากไหน?</summary><p>คำนวณตามไฟล์ BESS Feasibility Model: peak shaving, tariff management และส่วนลด demand charge จากขนาดแบตเตอรี่ ต้นทุนต่อ kWh และอัตราค่าไฟที่กำหนด ยังไม่รวมการเสื่อมของแบตเตอรี่หรือภาษี</p></details>
       <details><summary>ข้อมูลทดลองกับบัญชีจริงต่างกันอย่างไร?</summary><p>โหมดทดลองใช้ข้อมูลสมมติและเก็บการปรับค่าในเบราว์เซอร์นี้เท่านั้น เมื่อเข้าสู่ระบบ โครงการลูกค้าจะบันทึกบนคลาวด์และเห็นได้เฉพาะบัญชีของคุณ</p></details>
     </div>
   </section>

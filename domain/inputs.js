@@ -203,7 +203,7 @@ export function derive(product, raw) {
     const life = v.term, rep = v.invY <= life;
     f = { initial_investment: d.capS + v.enzy, project_life: life, revenue_y1: d.srev, revenue_growth: d.gS, revenue_growth_late: d.gSL, revenue2_y1: 0, revenue2_growth: 0,
       om_y1: v.om * d.capS, other_y1: v.othS, salvage_value: v.xfer, replacement_cost: rep ? v.invC * v.kwp : 0, replacement_year: rep ? v.invY : 0,
-      peak_rate: d.avoid, energy_y1_kwh: v.kwp * v.yld * d.use, customer_saving_y1: 0 };
+      peak_rate: d.avoid, energy_y1_kwh: v.kwp * v.yld * d.use, energy_degradation: v.deg, customer_saving_y1: 0 };
   } else if (product === 'hybrid') {
     const life = v.hlife, rep = v.invY <= life;
     const swap = v.bswap < life;
@@ -211,12 +211,12 @@ export function derive(product, raw) {
       revenue2_y1: v.share * d.bnet, revenue2_growth: d.gB, revenue2_growth_late: d.gBL, revenue2_reset_every: swap ? v.bswap : 0, revenue2_degradation: v.bdeg,
       replacement2_cost: swap ? d.swapc : 0, replacement2_year: 0, replacement2_every: swap ? v.bswap : 0,
       om_y1: v.om * d.capS + v.bom * d.capB, other_y1: v.othS + v.othB, salvage_value: v.xfer, replacement_cost: rep ? v.invC * v.kwp : 0, replacement_year: rep ? v.invY : 0,
-      peak_rate: tou ? v.peak : v.norm, offpeak_rate: tou ? v.off : v.norm, peak_energy_kwh_day: d.usable, energy_y1_kwh: v.kwp * v.yld * d.use,
+      peak_rate: tou ? v.peak : v.norm, offpeak_rate: tou ? v.off : v.norm, peak_energy_kwh_day: d.usable, energy_y1_kwh: v.kwp * v.yld * d.use, energy_degradation: v.deg,
       customer_saving_y1: v.kwp * v.yld * d.use * (d.avoid - d.ppa) + (1 - v.share) * d.bnet };
   } else {
     f = { initial_investment: d.capB + v.enzy, project_life: v.blife, revenue_y1: v.share * d.bnet, revenue_growth: d.gB, revenue_growth_late: d.gBL, revenue2_y1: 0, revenue2_growth: 0,
       om_y1: v.bom * d.capB, other_y1: v.othB, salvage_value: v.bsalv * d.capB, replacement_cost: 0, replacement_year: 0,
-      peak_rate: tou ? v.peak : v.norm, offpeak_rate: tou ? v.off : v.norm, peak_energy_kwh_day: d.usable, energy_y1_kwh: d.bin * v.rte,
+      peak_rate: tou ? v.peak : v.norm, offpeak_rate: tou ? v.off : v.norm, peak_energy_kwh_day: d.usable, energy_y1_kwh: d.bin * v.rte, energy_degradation: v.bdeg,
       customer_saving_y1: (1 - v.share) * d.bnet };
   }
   f.discount_rate = v.rate; f.om_growth = omg; f.other_growth = othg;
