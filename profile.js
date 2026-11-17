@@ -81,7 +81,7 @@ export function avatarHtml(p, cls = '') {
 }
 
 function cardHtml(p) {
-  const meta = [p.location ? `<span>⌖ ${esc(p.location)}</span>` : '', p.email ? `<span>✉ ${esc(p.email)}</span>` : '<span>โหมดทดลอง · บันทึกในเบราว์เซอร์นี้</span>'].filter(Boolean).join('<i>·</i>');
+  const meta = [p.location ? `<span>${esc(p.location)}</span>` : '', p.email ? `<span>${esc(p.email)}</span>` : '<span>โหมดทดลอง · บันทึกในเบราว์เซอร์นี้</span>'].filter(Boolean).join('<i>·</i>');
   return `<div class="profile-card"><div class="profile-cover"></div><div class="profile-body">${avatarHtml(p, 'xl')}<div class="profile-text"><h2>${esc(displayName(p))}</h2><p>${esc(p.job_title || 'ยังไม่ได้ระบุตำแหน่ง')}</p><div class="profile-meta">${meta}</div></div></div></div>`;
 }
 
